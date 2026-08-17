@@ -1,0 +1,56 @@
+# AI Calling Flow - Hostinger Docker Manager
+# Paste this YAML in Hostinger → Docker Manager → .yaml editor
+
+services:
+  voice-backend:
+    build:
+      context: .
+      dockerfile: deploy/backend.Dockerfile
+    container_name: voice-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - SARVAM_API_KEY=${SARVAM_API_KEY}
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - ELEVENLABS_VOICE_ID=${ELEVENLABS_VOICE_ID:-21m00Tcm4TlvDq8ikWAM}
+      - EXOTEL_SID=${EXOTEL_SID}
+      - EXOTEL_API_KEY=${EXOTEL_API_KEY}
+      - EXOTEL_API_TOKEN=${EXOTEL_API_TOKEN}
+      - EXOTEL_CALLER_ID=${EXOTEL_CALLER_ID}
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+      - DATABASE_URL=${DATABASE_URL}
+      - SERVER_PUBLIC_URL=${SERVER_PUBLIC_URL}
+    volumes:
+      - voice_data:/app/data
+    networks:
+      - voice-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  voice-frontend:
+    build:
+      context: .
+      dockerfile: deploy/frontend.Dockerfile
+    container_name: voice-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      voice-backend:
+        condition: service_healthy
+    networks:
+      - voice-net
+
+volumes:
+  voice_data:
+    driver: local
+
+networks:
+  voice-net:
+    driver: bridge

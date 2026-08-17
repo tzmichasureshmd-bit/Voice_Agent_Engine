@@ -1,0 +1,64 @@
+# TZMICHA AI OS — Production Docker Compose
+# voice.tzmicha.com | Hostinger KNM2 | 200.97.174.56
+
+services:
+  voice-backend:
+    build:
+      context: ..
+      dockerfile: deploy/backend.Dockerfile
+    container_name: voice-backend
+    restart: unless-stopped
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+      - SERVER_PUBLIC_URL=https://voice.tzmicha.com
+      - COQUI_TOS_AGREED=1
+      # Telephony (Plivo)
+      - PLIVO_AUTH_ID=${PLIVO_AUTH_ID}
+      - PLIVO_AUTH_TOKEN=${PLIVO_AUTH_TOKEN}
+      - PLIVO_FROM_NUMBER=${PLIVO_FROM_NUMBER}
+      # Optional
+      - SARVAM_API_KEY=${SARVAM_API_KEY}
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+    volumes:
+      - voice_data:/app/data
+      - tts_models:/root/.local/share/tts
+    networks:
+      - voice-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  voice-frontend:
+    build:
+      context: ..
+      dockerfile: deploy/frontend.Dockerfile
+    container_name: voice-frontend
+    restart: unless-stopped
+    depends_on:
+      voice-backend:
+        condition: service_healthy
+    networks:
+      - voice-net
+      - traefik-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.voice.rule=Host(`voice.tzmicha.com`)"
+      - "traefik.http.routers.voice.entrypoints=websecure"
+      - "traefik.http.routers.voice.tls.certresolver=myresolver"
+      - "traefik.http.services.voice.loadbalancer.server.port=80"
+
+volumes:
+  voice_data:
+    driver: local
+  tts_models:
+    driver: local
+
+networks:
+  voice-net:
+    driver: bridge
+  traefik-net:
+    external: true
+    name: traefik-net

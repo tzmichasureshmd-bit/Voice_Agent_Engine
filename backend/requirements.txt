@@ -1,0 +1,19 @@
+fastapi
+uvicorn[standard]
+groq
+sqlalchemy
+psycopg2-binary
+pydantic
+python-multipart
+aiofiles
+python-dotenv
+httpx
+websockets
+beautifulsoup4
+firebase-admin
+# TZMICHA ENGINE
+openai-whisper
+torch
+torchaudio
+numpy<2
+edge-tts

@@ -1,0 +1,72 @@
+# ── Secrets ──────────────────────────────────────────────
+.env
+.env.*
+*.env
+serviceAccountKey.json
+deploy/.env.production
+tzmicha_platform/.env
+backend/.env
+
+# ── All Markdown docs ────────────────────────────────────
+*.md
+*.MD
+
+# ── Databases / logs ─────────────────────────────────────
+*.db
+*.log
+*.sqlite
+
+# ── Audio / media files ──────────────────────────────────
+*.wav
+*.mp3
+*.jpeg
+*.jpg
+*.png
+!data/frontend/dashboard/public/icon-192.png
+!data/frontend/dashboard/public/icon-512.png
+!data/frontend/dashboard/public/favicon.png
+!data/frontend/dashboard/public/favicon.svg
+!data/frontend/dashboard/public/voice_logo.jpeg
+!data/frontend/dashboard/src/assets/voice_logo.jpeg
+
+# ── Python cache ─────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pycache
+
+# ── Node / build ─────────────────────────────────────────
+node_modules/
+dev-dist/
+dist/
+
+# ── Binaries / archives ──────────────────────────────────
+ngrok/
+ngrok.zip
+*.exe
+*.zip
+
+# ── Test / scratch files ─────────────────────────────────
+test_*.py
+check_voices.py
+list_voices.py
+quick_voice_test.py
+real_agent.py
+real_call.py
+serve_demo.py
+voice_demo.py
+voice_demo_live.html
+output.wav
+output_long.wav
+
+# ── Root loose files ─────────────────────────────────────
+voice_logo.jpeg
+START_CALL.bat
+START.bat
+
+# ── IDE / OS ─────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

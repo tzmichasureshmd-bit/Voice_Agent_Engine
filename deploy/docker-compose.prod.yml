@@ -14,13 +14,12 @@ services:
       - GROQ_API_KEY=${GROQ_API_KEY}
       - DATABASE_URL=${DATABASE_URL}
       - SERVER_PUBLIC_URL=https://voice.tzmicha.com
-      - COQUI_TOS_AGREED=1
-      # Telephony (Plivo)
-      - PLIVO_AUTH_ID=${PLIVO_AUTH_ID}
-      - PLIVO_AUTH_TOKEN=${PLIVO_AUTH_TOKEN}
-      - PLIVO_FROM_NUMBER=${PLIVO_FROM_NUMBER}
-      # Optional
-      - SARVAM_API_KEY=${SARVAM_API_KEY}
+      - EXOTEL_SID=${EXOTEL_SID}
+      - EXOTEL_API_KEY=${EXOTEL_API_KEY}
+      - EXOTEL_API_TOKEN=${EXOTEL_API_TOKEN}
+      - EXOTEL_CALLER_ID=${EXOTEL_CALLER_ID}
+      - HUMAN_AGENT_NUMBER=${HUMAN_AGENT_NUMBER}
+      - WHISPER_MODEL=${WHISPER_MODEL}
       - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
     volumes:
       - voice_data:/app/data

@@ -8,6 +8,8 @@ services:
       dockerfile: deploy/backend.Dockerfile
     container_name: voice-backend
     restart: unless-stopped
+    env_file:
+      - .env.production
     environment:
       - GROQ_API_KEY=${GROQ_API_KEY}
       - DATABASE_URL=${DATABASE_URL}

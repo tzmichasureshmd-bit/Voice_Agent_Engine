@@ -1,6 +1,9 @@
 fastapi
 uvicorn[standard]
+uvloop
+httptools
 groq
+razorpay
 sqlalchemy
 psycopg2-binary
 pydantic

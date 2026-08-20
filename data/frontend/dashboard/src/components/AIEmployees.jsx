@@ -37,7 +37,14 @@ function getGoalDisplay(emp) {
 }
 
 // ── Checklist items ──
-const CHECKLIST_ITEMS = ['General', 'Voice', 'Knowledge Base', 'Call Settings', 'Tools', 'Advanced']
+const CHECKLIST_ITEMS = [
+  { label: 'Name & Company',    check: (d) => !!(d.name && d.company_name) },
+  { label: 'Language set',      check: (d) => !!d.language },
+  { label: 'Custom greeting',   check: (d) => !!(d.opening_message && d.opening_message !== DEFAULT_OPENING) },
+  { label: 'Script written',    check: (d) => !!(d.script && d.script.length > 50) },
+  { label: 'Goal defined',      check: (d) => !!d.goal },
+  { label: 'Multi-language',    check: (d) => !!(d.languages && d.languages.includes(',')) },
+]
 
 // ── Main Component ───────────────────────────────────────────────────
 export default function AIEmployees() {
@@ -107,13 +114,21 @@ export default function AIEmployees() {
     let count = 0
     if (data.name && data.company_name) count++
     if (data.language) count++
-    if (data.opening_message) count++
-    if (data.script) count++
+    if (data.opening_message && data.opening_message !== DEFAULT_OPENING) count++
+    if (data.script && data.script.length > 50) count++
     if (data.goal) count++
+    if (data.languages && data.languages.includes(',')) count++ // multiple languages
     return count
   }
 
-  const progressCount = form ? computeProgress(form) : 0
+  const getReadinessLabel = (pct) => {
+    if (pct >= 90) return { label: '🟢 Production Ready', color: '#10b981' }
+    if (pct >= 70) return { label: '🟡 Almost Ready', color: '#fbbf24' }
+    if (pct >= 40) return { label: '🟠 Needs Work', color: '#f97316' }
+    return { label: '🔴 Not Ready', color: '#f87171' }
+  }
+
+  const progressCount = form ? CHECKLIST_ITEMS.filter(item => item.check(form)).length : 0
   const progressPercent = Math.round((progressCount / 6) * 100)
 
   // ── Create employee ──
@@ -392,22 +407,22 @@ export default function AIEmployees() {
       <div>
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h1 style={{ fontSize: '22px', fontWeight: '700', color: '#f0f0f8' }}>Assistants</h1>
+          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+          <div>
+            <h1 style={{ fontSize: '26px', fontWeight: '800', color: '#f0f0f8' }}>AI Agents</h1>
+            <p style={{ fontSize: '13px', color: '#55556a', marginTop: '4px' }}>Each agent is a trained voice caller with its own script, voice and goal.</p>
+          </div>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <div style={{ position: 'relative' }}>
               <Search size={14} color="#55556a" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-              <input
-                type="text" placeholder="Search assistants..."
+              <input type="text" placeholder="Search agents..."
                 value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                className="input"
-                style={{ paddingLeft: '34px', fontSize: '12px', width: '220px' }}
-              />
+                className="input" style={{ paddingLeft: '34px', fontSize: '12px', width: '200px' }} />
             </div>
             <motion.button whileTap={{ scale: 0.97 }}
               onClick={() => { resetForm(); setView('create') }}
-              className="btn btn-primary" style={{ gap: '6px' }}>
-              <Plus size={14} /> Create Assistant
+              className="btn btn-primary" style={{ gap: '6px', padding: '8px 16px' }}>
+              <Plus size={14} /> New agent
             </motion.button>
           </div>
         </motion.div>
@@ -441,69 +456,71 @@ export default function AIEmployees() {
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                 style={{
                   background: '#0e0e1a', border: '1px solid #1e1e30', borderRadius: '16px',
-                  overflow: 'hidden', cursor: 'pointer',
-                  transition: 'border-color 0.2s',
+                  overflow: 'hidden', cursor: 'pointer', transition: 'border-color 0.2s',
                 }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(124,58,237,0.25)'}
                 onMouseLeave={e => e.currentTarget.style.borderColor = '#1e1e30'}
                 onClick={() => openDetail(emp)}
               >
                 <div style={{ padding: '18px' }}>
-                  {/* Avatar + Name + Badge */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{
-                        width: 40, height: 40, borderRadius: '12px',
-                        background: CARD_GRADIENTS[i % CARD_GRADIENTS.length],
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '14px', fontWeight: '700', color: 'white',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-                      }}>
-                        {getInitials(emp.name)}
-                      </div>
-                      <div>
-                        <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#f0f0f8' }}>{emp.name || 'Assistant'}</h3>
-                        <p style={{ fontSize: '11px', color: '#55556a', marginTop: '2px' }}>
-                          {getLanguageString(emp)}
-                        </p>
-                      </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
+                    <div style={{
+                      width: 44, height: 44, borderRadius: '14px',
+                      background: CARD_GRADIENTS[i % CARD_GRADIENTS.length],
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Bot size={20} color="white" />
                     </div>
                     <span style={{
-                      background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.2)',
-                      borderRadius: '999px', padding: '3px 8px', fontSize: '9px',
-                      fontWeight: '700', color: '#fbbf24', textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
+                      background: i === 0 ? 'rgba(124,58,237,0.15)' : 'rgba(255,255,255,0.06)',
+                      border: `1px solid ${i === 0 ? 'rgba(124,58,237,0.3)' : '#1e1e30'}`,
+                      borderRadius: '999px', padding: '3px 10px', fontSize: '10px',
+                      fontWeight: '700', color: i === 0 ? '#a78bfa' : '#55556a',
                     }}>
-                      OUTBOUND
+                      {i === 0 ? '✦ Premium' : 'Normal'}
                     </span>
                   </div>
-
-                  {/* Goal */}
-                  <p style={{ fontSize: '12px', color: '#f0f0f8', marginBottom: '8px', lineHeight: 1.5 }}>
-                    {getGoalDisplay(emp)}
+                  <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#f0f0f8', marginBottom: '4px' }}>
+                    {emp.name || 'Assistant'} — {emp.role || emp.goal || 'Sales'}
+                  </h3>
+                  <p style={{ fontSize: '12px', color: '#55556a', marginBottom: '12px', lineHeight: 1.5 }}>
+                    {emp.script ? emp.script.slice(0, 60) + '...' : getGoalDisplay(emp)}
                   </p>
-
-                  {/* Company */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '14px' }}>
-                    <Building2 size={12} color="#55556a" />
-                    <span style={{ fontSize: '11px', color: '#55556a' }}>{emp.company_name || 'No company'}</span>
+                    <span style={{ fontSize: '11px', color: '#55556a' }}>🌐 {getLanguageString(emp)}</span>
+                    <span style={{ fontSize: '11px', color: '#33334a' }}>·</span>
+                    <span style={{ fontSize: '11px', color: '#55556a' }}>{emp.gender || 'Female'}</span>
+                    <span style={{ fontSize: '11px', color: '#33334a' }}>·</span>
+                    <span style={{ fontSize: '11px', color: '#a78bfa', fontWeight: '600' }}>$2.50/min</span>
                   </div>
-
                   <div style={{ height: '1px', background: '#1e1e30', marginBottom: '14px' }} />
-
-                  {/* Actions */}
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <motion.button whileTap={{ scale: 0.97 }}
-                      onClick={(e) => { e.stopPropagation(); openDetail(emp) }}
-                      className="btn btn-ghost"
-                      style={{ flex: 1, justifyContent: 'center', fontSize: '11px', gap: '4px' }}>
-                      <Globe size={12} /> Role Play
-                    </motion.button>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <motion.button whileTap={{ scale: 0.97 }}
                       onClick={(e) => { e.stopPropagation(); openDetail(emp) }}
                       className="btn btn-primary"
-                      style={{ flex: 1, justifyContent: 'center', fontSize: '11px', gap: '4px' }}>
-                      <Phone size={12} /> Test
+                      style={{ flex: 1, justifyContent: 'center', fontSize: '12px', gap: '6px', padding: '8px' }}>
+                      <MessageSquareText size={13} /> Chat test
+                    </motion.button>
+                    <motion.button whileTap={{ scale: 0.97 }}
+                      onClick={(e) => { e.stopPropagation(); openDetail(emp) }}
+                      className="btn btn-ghost" style={{ padding: '8px 10px' }}>
+                      <Phone size={13} />
+                    </motion.button>
+                    <motion.button whileTap={{ scale: 0.97 }}
+                      onClick={(e) => { e.stopPropagation(); openDetail(emp) }}
+                      className="btn btn-ghost" style={{ padding: '8px 10px' }}>
+                      <PenLine size={13} />
+                    </motion.button>
+                    <motion.button whileTap={{ scale: 0.97 }}
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        if (confirm('Delete this agent?')) {
+                          await api.delete(`/ai-employees/${emp.id}`).catch(() => {})
+                          fetchEmployees()
+                        }
+                      }}
+                      className="btn btn-ghost" style={{ padding: '8px 10px', color: '#f87171' }}>
+                      <X size={13} />
                     </motion.button>
                   </div>
                 </div>
@@ -747,21 +764,26 @@ export default function AIEmployees() {
                 <span style={{ fontSize: '11px', color: '#55556a' }}>{progressCount} / 6 sections</span>
                 <span style={{ fontSize: '11px', fontWeight: '700', color: '#a78bfa' }}>{progressPercent}%</span>
               </div>
-              <div style={{ height: '4px', background: '#1e1e30', borderRadius: '999px', marginBottom: '16px', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${progressPercent}%`, background: '#7c3aed', borderRadius: '999px', transition: 'width 0.3s' }} />
+              <div style={{ height: '4px', background: '#1e1e30', borderRadius: '999px', marginBottom: '8px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${progressPercent}%`, background: progressPercent >= 90 ? '#10b981' : progressPercent >= 70 ? '#fbbf24' : '#7c3aed', borderRadius: '999px', transition: 'width 0.3s' }} />
               </div>
+              {(() => { const r = getReadinessLabel(progressPercent); return (
+                <div style={{ background: `${r.color}15`, border: `1px solid ${r.color}33`, borderRadius: '8px', padding: '8px 10px', marginBottom: '14px', textAlign: 'center' }}>
+                  <p style={{ fontSize: '12px', fontWeight: '800', color: r.color }}>{r.label}</p>
+                </div>
+              )})()}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {CHECKLIST_ITEMS.map((item, idx) => {
-                  const isChecked = idx < progressCount
+                  const isChecked = item.check(form)
                   return (
-                    <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                    <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       {isChecked ? (
                         <CheckSquare size={14} color="#7c3aed" />
                       ) : (
                         <Square size={14} color="#33334a" />
                       )}
                       <span style={{ fontSize: '11px', color: isChecked ? '#f0f0f8' : '#33334a', fontWeight: isChecked ? '500' : '400' }}>
-                        {item}
+                        {item.label}
                       </span>
                     </div>
                   )

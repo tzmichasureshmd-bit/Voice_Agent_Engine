@@ -6,7 +6,7 @@ import {
   MoreHorizontal, LogOut, Sun, Moon,
   Megaphone, UsersRound, User,
   BookOpen, GitBranch, Puzzle, Code2, CreditCard, Settings,
-  Sparkles,
+  Link2, Key, Shield,
 } from 'lucide-react'
 import { useTheme } from '../ThemeContext'
 
@@ -15,14 +15,17 @@ const MORE_REAL = [
   { id: 'team',         icon: UsersRound,  label: 'Team',          desc: 'Manage team members'       },
   { id: 'knowledge',    icon: BookOpen,    label: 'Knowledge',     desc: 'Upload FAQs & documents'   },
   { id: 'billing',      icon: CreditCard,  label: 'Billing',       desc: 'Plans & usage'             },
+  { id: 'integrations', icon: Link2,       label: 'Integrations',  desc: 'Connect CRM & tools'       },
+  { id: 'api',          icon: Key,         label: 'API Keys',      desc: 'Developer access'          },
+  { id: 'clientadmin',  icon: Shield,      label: 'Admin',         desc: 'Team & permissions'        },
+  { id: 'settings',     icon: Settings,    label: 'Settings',      desc: 'Configure AI engine'       },
   { id: 'profile',      icon: User,        label: 'Profile',       desc: 'Account & AI settings'     },
 ]
 
 const MORE_SOON = [
-  { icon: GitBranch,   label: 'Workflows'    },
-  { icon: Puzzle,      label: 'Integrations' },
-  { icon: Code2,       label: 'API'          },
-  { icon: Settings,    label: 'Settings'     },
+  { icon: GitBranch, label: 'Call Flows' },
+  { icon: Puzzle,    label: 'Webhooks'   },
+  { icon: Code2,     label: 'Analytics'  },
 ]
 
 function Tooltip({ label, children }) {
@@ -184,7 +187,7 @@ export default function AppShell({ navItems = [], activeTab, setActiveTab, onLog
                   {companyName}
                 </p>
                 <p style={{ fontSize: '10px', color: '#a78bfa', fontWeight: '600', marginTop: '1px' }}>
-                  {clientData?.plan === 'pro' ? '✦ Pro Plan' : 'Free Plan'}
+                  {clientData?.plan === 'enterprise' ? '✦ Enterprise' : clientData?.plan === 'pro' ? '✦ Pro Plan' : clientData?.plan === 'growth' ? '✦ Growth Plan' : clientData?.plan === 'starter' ? '✦ Starter Plan' : 'Free Plan'}
                 </p>
               </div>
               <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px' }}>

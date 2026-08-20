@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
-import { Bot, Phone, Users, TrendingUp, Flame, Snowflake, Sun, Clock, Activity, Zap } from 'lucide-react'
+import { Bot, Phone, Users, TrendingUp, Flame, Snowflake, Sun, Clock, Activity, Zap, Wallet } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts'
 import api from '../api'
 
@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [calls,   setCalls]   = useState([])
   const [loading, setLoading] = useState(true)
   const [activeEmployees, setActiveEmployees] = useState(0)
+  const [timePeriod, setTimePeriod] = useState(7)
 
   useEffect(() => {
     Promise.all([
@@ -35,28 +36,42 @@ export default function Dashboard() {
 
   const recentCalls = calls.slice(0, 6)
 
+  const totalMinutes = calls.reduce((s, c) => s + Math.round((c.duration_seconds || 0) / 60), 0)
+  const connected = calls.filter(c => c.call_status === 'completed').length
+  const connectRate = calls.length ? ((connected / calls.length) * 100).toFixed(1) : '0.0'
+  const avgDur = calls.length ? Math.round(calls.reduce((s,c) => s + (c.duration_seconds||0), 0) / calls.length) : 0
+
   const workforce = [
-    { label: 'Active AI Employees', value: activeEmployees,                         icon: Bot,       color: '#a78bfa', glow: '124,58,237',   sub: 'Configured agents'  },
-    { label: 'Conversations',       value: stats.total_calls,                       icon: Phone,     color: '#34d399', glow: '16,185,129',   sub: 'Total calls made'   },
-    { label: 'Leads Qualified',     value: stats.hot_leads + stats.warm_leads,      icon: Users,     color: '#60a5fa', glow: '96,165,250',   sub: 'Hot + Warm leads'   },
-    { label: 'Conversion Rate',     value: stats.conversion_rate,                   icon: TrendingUp,color: '#fbbf24', glow: '251,191,36',   sub: 'Hot leads / total'  },
+    { label: 'TOTAL CALLS',    value: stats.total_calls,  icon: Phone,      color: '#a78bfa', glow: '124,58,237', sub: `Last ${timePeriod} days` },
+    { label: 'CONNECT RATE',   value: connectRate + '%',  icon: TrendingUp, color: '#06b6d4', glow: '6,182,212',  sub: `${connected} connected` },
+    { label: 'MINUTES USED',   value: totalMinutes,       icon: Clock,      color: '#10b981', glow: '16,185,129', sub: `Avg ${avgDur}s per call` },
+    { label: 'WALLET BALANCE', value: '$4,500',            icon: Activity,   color: '#fbbf24', glow: '251,191,36', sub: '$0 spent in 7d' },
   ]
 
   return (
     <div>
       {/* ── Header ── */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '32px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-          <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#a78bfa', boxShadow: '0 0 10px #a78bfa' }} />
-          <span style={{ fontSize: '11px', fontWeight: '700', color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '1.5px' }}>AI Workforce</span>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div>
+            <h1 style={{ fontSize: '28px', fontWeight: '900', letterSpacing: '-0.8px', lineHeight: 1.1, color: '#f0f0f8' }}>
+              Good {getGreeting()}, {getFirstName()}
+            </h1>
+            <p style={{ fontSize: '13px', color: '#55556a', marginTop: '6px' }}>
+              {new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })} · Here's how your voice operations are performing.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '4px', background: '#0e0e1a', border: '1px solid #1e1e30', borderRadius: '10px', padding: '4px' }}>
+            {[7,14,30].map(d => (
+              <button key={d} onClick={() => setTimePeriod(d)} style={{
+                padding: '5px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: '700',
+                background: timePeriod === d ? '#7c3aed' : 'transparent',
+                color: timePeriod === d ? '#fff' : '#55556a',
+                transition: 'all 0.15s',
+              }}>{d}d</button>
+            ))}
+          </div>
         </div>
-        <h1 style={{ fontSize: '30px', fontWeight: '900', letterSpacing: '-0.8px', lineHeight: 1.1 }}>
-          <span style={{ color: '#f0f0f8' }}>Good {getGreeting()}, </span>
-          <span style={{ background: 'linear-gradient(135deg, #f0f0f8 0%, #a78bfa 60%, #7c3aed 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            {getFirstName()}
-          </span>
-        </h1>
-        <p style={{ fontSize: '13px', color: '#55556a', marginTop: '6px' }}>Monitor what your AI Employees are doing right now.</p>
       </motion.div>
 
       {/* ── Stat Cards ── */}
@@ -65,28 +80,26 @@ export default function Dashboard() {
           <motion.div key={m.label}
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
             style={{
-              position: 'relative', overflow: 'hidden',
-              background: '#0e0e1a',
-              border: `1px solid rgba(${m.glow},0.15)`,
-              borderRadius: '18px', padding: '22px',
-              boxShadow: `0 0 0 1px rgba(${m.glow},0.06), 0 20px 40px rgba(0,0,0,0.4)`,
-              transition: 'all 0.25s',
+              background: '#0e0e1a', border: `1px solid rgba(${m.glow},0.15)`,
+              borderRadius: '16px', padding: '20px',
+              boxShadow: `0 0 0 1px rgba(${m.glow},0.06)`,
             }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = `rgba(${m.glow},0.35)`; e.currentTarget.style.boxShadow = `0 0 0 1px rgba(${m.glow},0.12), 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(${m.glow},0.08)` }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = `rgba(${m.glow},0.15)`; e.currentTarget.style.boxShadow = `0 0 0 1px rgba(${m.glow},0.06), 0 20px 40px rgba(0,0,0,0.4)` }}
           >
-            {/* BG orb */}
-            <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: `rgba(${m.glow},0.07)`, filter: 'blur(20px)', pointerEvents: 'none' }} />
-            <div style={{
-              width: '38px', height: '38px', borderRadius: '11px', marginBottom: '16px',
-              background: `rgba(${m.glow},0.12)`, border: `1px solid rgba(${m.glow},0.2)`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <m.icon size={16} color={m.color} strokeWidth={2} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '36px', height: '36px', borderRadius: '10px',
+                  background: `rgba(${m.glow},0.15)`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <m.icon size={16} color={m.color} />
+                </div>
+                <span style={{ fontSize: '11px', fontWeight: '700', color: '#55556a', textTransform: 'uppercase', letterSpacing: '0.8px' }}>{m.label}</span>
+              </div>
+              <span style={{ fontSize: '18px', color: '#1e1e30' }}>—</span>
             </div>
-            <p style={{ fontSize: '32px', fontWeight: '900', color: '#f0f0f8', letterSpacing: '-1.5px', lineHeight: 1 }}>{m.value}</p>
-            <p style={{ fontSize: '13px', fontWeight: '600', color: '#f0f0f8', marginTop: '8px' }}>{m.label}</p>
-            <p style={{ fontSize: '11px', color: '#33334a', marginTop: '3px' }}>{m.sub}</p>
+            <p style={{ fontSize: '30px', fontWeight: '900', color: '#f0f0f8', letterSpacing: '-1px', lineHeight: 1 }}>{m.value}</p>
+            <p style={{ fontSize: '11px', color: '#33334a', marginTop: '6px' }}>{m.sub}</p>
           </motion.div>
         ))}
       </div>

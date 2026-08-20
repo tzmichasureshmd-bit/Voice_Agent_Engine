@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Header, Request
 from fastapi.responses import StreamingResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
@@ -28,16 +29,23 @@ except ImportError:
     VOICE_ENABLED = False
     active_voice_calls = {}
 from config import HOST, PORT
+from billing_routes import router as billing_router
+from email_service import send_welcome, send_hot_lead_alert, send_call_summary, send_campaign_complete
 
 
 @asynccontextmanager
 async def lifespan(app):
-    init_db()
+    try:
+        init_db()
+    except Exception as e:
+        print(f"WARNING: DB init failed: {e} — app will start anyway")
     yield
 
 app = FastAPI(title="AI Caller - SaaS Platform", version="2.0", lifespan=lifespan)
 
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.include_router(billing_router)
 
 
 # ===== HELPERS =====
@@ -118,6 +126,9 @@ def register(data: ClientRegister, db: Session = Depends(get_db)):
     db.add(client)
     db.commit()
     db.refresh(client)
+    # Send welcome email
+    try: send_welcome(client.email, client.contact_name, client.company_name)
+    except: pass
     return {"message": "Registration successful", "client_id": client.id, "company": client.company_name}
 
 # Firebase Admin init (once) — optional, skip if key file missing
@@ -242,6 +253,7 @@ active_conversations = {}
 
 @app.post("/call/start")
 def start_call(request: CallRequest, client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
+    check_call_limit(client, db)  # enforce plan limits
     lead = db.query(Lead).filter(Lead.id == request.lead_id, Lead.client_id == client.id).first()
     if not lead: raise HTTPException(status_code=404, detail="Lead not found")
 
@@ -277,9 +289,26 @@ def end_call(conversation_id: str, client: Client = Depends(get_current_client),
     if conversation_id not in active_conversations:
         raise HTTPException(status_code=404, detail="Conversation not found")
     conv = active_conversations[conversation_id]
-    analysis = analyze_sentiment(conv["history"])
+    analysis = analyze_sentiment(conv["history"], summary_lang=conv.get("summary_lang", "en"))
 
-    call_log = CallLog(client_id=client.id, lead_id=conv["lead_id"], lead_name=conv["lead_name"], phone="simulated", duration_seconds=len(conv["history"]) * 15, transcript=json.dumps(conv["history"]), sentiment=analysis.get("sentiment", "neutral"), lead_score=analysis.get("score", 5), category=analysis.get("category", "warm"), summary=analysis.get("summary", ""), call_status="completed")
+    call_log = CallLog(
+        client_id=client.id, lead_id=conv["lead_id"], lead_name=conv["lead_name"],
+        phone="simulated", duration_seconds=len(conv["history"]) * 15,
+        transcript=json.dumps(conv["history"]),
+        sentiment=analysis.get("sentiment", "neutral"),
+        lead_score=analysis.get("score", 5),
+        category=analysis.get("category", "warm"),
+        summary=analysis.get("summary", ""),
+        call_status="completed",
+        intent=analysis.get("intent", ""),
+        emotion=analysis.get("emotion", ""),
+        buying_signals=json.dumps(analysis.get("buying_signals", [])),
+        objections=json.dumps(analysis.get("objections", [])),
+        recommended_action=analysis.get("recommended_action", ""),
+        follow_up_urgency=analysis.get("follow_up_urgency", "this_week"),
+        key_topics=json.dumps(analysis.get("key_topics", [])),
+        direction="outbound",
+    )
     db.add(call_log)
 
     lead = db.query(Lead).filter(Lead.id == conv["lead_id"]).first()
@@ -292,6 +321,15 @@ def end_call(conversation_id: str, client: Client = Depends(get_current_client),
     client.total_calls += 1
     db.commit()
     del active_conversations[conversation_id]
+    # Send email notifications
+    try:
+        notif_email = os.getenv('SMTP_USER', '')
+        if notif_email:
+            if analysis.get('category') == 'hot':
+                send_hot_lead_alert(notif_email, conv['lead_name'], analysis.get('score',0), analysis.get('summary',''), analysis.get('recommended_action','Follow up immediately'))
+            else:
+                send_call_summary(notif_email, conv['lead_name'], analysis.get('category','warm'), analysis.get('score',0), analysis.get('summary',''), len(conv['history'])*15)
+    except: pass
     return {"status": "call_ended", "analysis": analysis, "recommendation": get_lead_recommendation(analysis.get("category", "cold"))}
 
 
@@ -299,8 +337,32 @@ def end_call(conversation_id: str, client: Client = Depends(get_current_client),
 
 @app.get("/calls")
 def get_calls(client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
-    calls = db.query(CallLog).filter(CallLog.client_id == client.id).all()
-    return {"total": len(calls), "calls": calls}
+    calls = db.query(CallLog).filter(CallLog.client_id == client.id).order_by(CallLog.created_at.desc()).all()
+    result = []
+    for c in calls:
+        try: buying_signals = json.loads(getattr(c, 'buying_signals', None) or '[]')
+        except: buying_signals = []
+        try: objections = json.loads(getattr(c, 'objections', None) or '[]')
+        except: objections = []
+        try: key_topics = json.loads(getattr(c, 'key_topics', None) or '[]')
+        except: key_topics = []
+        result.append({
+            "id": c.id, "lead_id": c.lead_id, "lead_name": c.lead_name,
+            "phone": c.phone, "duration_seconds": c.duration_seconds,
+            "sentiment": c.sentiment, "lead_score": c.lead_score,
+            "category": c.category, "summary": c.summary,
+            "call_status": c.call_status, "recording_url": c.recording_url,
+            "direction": getattr(c, 'direction', 'outbound') or 'outbound',
+            "intent": getattr(c, 'intent', '') or '',
+            "emotion": getattr(c, 'emotion', '') or '',
+            "buying_signals": buying_signals,
+            "objections": objections,
+            "recommended_action": getattr(c, 'recommended_action', '') or '',
+            "follow_up_urgency": getattr(c, 'follow_up_urgency', 'this_week') or 'this_week',
+            "key_topics": key_topics,
+            "created_at": str(c.created_at),
+        })
+    return {"total": len(result), "calls": result}
 
 
 # ===== CAMPAIGNS =====
@@ -427,15 +489,15 @@ def remove_user(user_id: int, client: Client = Depends(get_current_client), db: 
 
 @app.get("/admin/clients")
 def get_all_clients(admin_key: str = Header(None, alias="x-admin-key"), db: Session = Depends(get_db)):
-    if admin_key != "superadmin123":
+    if admin_key != os.getenv("ADMIN_KEY", "superadmin123"):
         raise HTTPException(status_code=403, detail="Admin access only")
     clients = db.query(Client).all()
     return {"total": len(clients), "clients": [{"id": c.id, "company": c.company_name, "industry": c.industry, "email": c.email, "plan": c.plan, "total_calls": c.total_calls, "is_active": c.is_active, "created": str(c.created_at)} for c in clients]}
 
 @app.put("/admin/clients/{client_id}/plan")
 def change_plan(client_id: int, plan: str, admin_key: str = Header(None, alias="x-admin-key"), db: Session = Depends(get_db)):
-    if admin_key != "superadmin123": raise HTTPException(status_code=403, detail="Admin access only")
-    if plan not in ['free', 'basic', 'pro']: raise HTTPException(status_code=400, detail="Plan must be free, basic, or pro")
+    if admin_key != os.getenv("ADMIN_KEY", "superadmin123"): raise HTTPException(status_code=403, detail="Admin access only")
+    if plan not in ['free', 'starter', 'growth', 'pro', 'enterprise']: raise HTTPException(status_code=400, detail="Invalid plan")
     client = db.query(Client).filter(Client.id == client_id).first()
     if not client: raise HTTPException(status_code=404, detail="Client not found")
     client.plan = plan
@@ -444,7 +506,7 @@ def change_plan(client_id: int, plan: str, admin_key: str = Header(None, alias="
 
 @app.put("/admin/clients/{client_id}/toggle")
 def toggle_client(client_id: int, admin_key: str = Header(None, alias="x-admin-key"), db: Session = Depends(get_db)):
-    if admin_key != "superadmin123": raise HTTPException(status_code=403, detail="Admin access only")
+    if admin_key != os.getenv("ADMIN_KEY", "superadmin123"): raise HTTPException(status_code=403, detail="Admin access only")
     client = db.query(Client).filter(Client.id == client_id).first()
     if not client: raise HTTPException(status_code=404, detail="Client not found")
     client.is_active = not client.is_active
@@ -453,7 +515,7 @@ def toggle_client(client_id: int, admin_key: str = Header(None, alias="x-admin-k
 
 @app.put("/admin/clients/{client_id}/reset-password")
 def admin_reset_password(client_id: int, new_password: str, admin_key: str = Header(None, alias="x-admin-key"), db: Session = Depends(get_db)):
-    if admin_key != "superadmin123": raise HTTPException(status_code=403, detail="Admin access only")
+    if admin_key != os.getenv("ADMIN_KEY", "superadmin123"): raise HTTPException(status_code=403, detail="Admin access only")
     client = db.query(Client).filter(Client.id == client_id).first()
     if not client: raise HTTPException(status_code=404, detail="Client not found")
     client.password = hash_password(new_password)
@@ -558,6 +620,7 @@ class VoiceCallRequest(BaseModel):
 def initiate_voice_call(req: VoiceCallRequest,
                         client: Client = Depends(get_current_client),
                         db: Session = Depends(get_db)):
+    check_call_limit(client, db)  # enforce plan limits on real calls too
     lead = db.query(Lead).filter(Lead.id == req.lead_id, Lead.client_id == client.id).first()
     if not lead: raise HTTPException(status_code=404, detail="Lead not found")
     if not lead.phone: raise HTTPException(status_code=400, detail="Lead has no phone number")
@@ -738,7 +801,7 @@ def _save_call_log(call_id: str, db):
     transcript = call.get("transcript", [])
     if not transcript: return
     try:
-        analysis = analyze_sentiment(transcript)
+        analysis = analyze_sentiment(transcript, summary_lang=call.get("summary_lang", "en"))
         duration = int(time.time() - call.get("started_at", time.time()))
         lead_name = "Incoming Caller" if call.get("direction") == "inbound" else "Voice Lead"
         # Try to get real lead name
@@ -763,6 +826,14 @@ def _save_call_log(call_id: str, db):
             summary          = analysis.get("summary", ""),
             call_status      = "transferred" if call.get("transfer_requested") else "completed",
             recording_url    = call.get("recording_url", ""),
+            intent           = analysis.get("intent", ""),
+            emotion          = analysis.get("emotion", ""),
+            buying_signals   = json.dumps(analysis.get("buying_signals", [])),
+            objections       = json.dumps(analysis.get("objections", [])),
+            recommended_action = analysis.get("recommended_action", ""),
+            follow_up_urgency  = analysis.get("follow_up_urgency", "this_week"),
+            key_topics       = json.dumps(analysis.get("key_topics", [])),
+            direction        = call.get("direction", "outbound"),
         )
         db.add(log)
         client_row = db.query(Client).filter(Client.id == call["client_id"]).first()
@@ -1037,6 +1108,246 @@ def search_knowledge(query: ChatMessage, client: Client = Depends(get_current_cl
     return {"results": [{"title": i.title, "content": i.content[:200]} for i in results[:5]]}
 
 
+# ===== CALL SUMMARY WHATSAPP =====
+
+class WhatsAppSummaryRequest(BaseModel):
+    call_id: int
+    phone: Optional[str] = None  # override number, else uses lead's phone
+
+@app.post("/calls/{call_id}/whatsapp-summary")
+def send_whatsapp_summary(call_id: int, req: WhatsAppSummaryRequest,
+                          client: Client = Depends(get_current_client),
+                          db: Session = Depends(get_db)):
+    """Send call summary to lead's WhatsApp number via wa.me link (returns link for frontend to open)"""
+    call = db.query(CallLog).filter(CallLog.id == call_id, CallLog.client_id == client.id).first()
+    if not call: raise HTTPException(status_code=404, detail="Call not found")
+
+    direction = "Incoming" if getattr(call, 'direction', 'outbound') == 'inbound' else "Outgoing"
+    score_emoji = "🔥" if call.category == "hot" else "🌤️" if call.category == "warm" else "❄️"
+    duration_min = f"{call.duration_seconds // 60}m {call.duration_seconds % 60}s" if call.duration_seconds else "N/A"
+
+    summary_text = (
+        f"📞 *{direction} Call Summary*\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"👤 *Lead:* {call.lead_name}\n"
+        f"⏱️ *Duration:* {duration_min}\n"
+        f"🎯 *Score:* {call.lead_score}/10\n"
+        f"{score_emoji} *Category:* {(call.category or 'warm').upper()}\n"
+        f"😊 *Sentiment:* {call.sentiment or 'neutral'}\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"📋 *Summary:*\n{call.summary or 'No summary available'}\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"🤖 Powered by AI Voice Engine"
+    )
+
+    # Determine phone number
+    phone = req.phone
+    if not phone and call.lead_id:
+        lead = db.query(Lead).filter(Lead.id == call.lead_id).first()
+        if lead: phone = lead.phone
+    if not phone:
+        phone = call.phone
+
+    # Clean phone number
+    phone_clean = ''.join(filter(str.isdigit, phone or ''))
+    if phone_clean.startswith('0'): phone_clean = '91' + phone_clean[1:]
+    if len(phone_clean) == 10: phone_clean = '91' + phone_clean
+
+    import urllib.parse
+    wa_link = f"https://wa.me/{phone_clean}?text={urllib.parse.quote(summary_text)}"
+
+    return {
+        "status": "ok",
+        "wa_link": wa_link,
+        "phone": phone_clean,
+        "summary": summary_text
+    }
+
+
+# ===== API KEY SYSTEM =====
+
+import secrets
+
+PLAN_LIMITS = {
+    "free":       {"calls": 50,    "price": 0,     "api_keys": 1},
+    "starter":    {"calls": 500,   "price": 5000,  "api_keys": 2},
+    "growth":     {"calls": 2000,  "price": 15000, "api_keys": 5},
+    "pro":        {"calls": 5000,  "price": 30000, "api_keys": 10},
+    "enterprise": {"calls": 15000, "price": 75000, "api_keys": 999},
+}
+
+def get_client_by_api_key(api_key: str, db: Session):
+    from database import APIKey
+    key_obj = db.query(APIKey).filter(APIKey.key == api_key, APIKey.is_active == True).first()
+    if not key_obj: return None, None
+    client = db.query(Client).filter(Client.id == key_obj.client_id).first()
+    # Update usage
+    key_obj.calls_used += 1
+    key_obj.last_used = datetime.utcnow()
+    db.commit()
+    return client, key_obj
+
+class APIKeyCreate(BaseModel):
+    name: str
+    calls_limit: Optional[int] = 1000
+
+@app.post("/api-keys")
+def create_api_key(data: APIKeyCreate, client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
+    from database import APIKey
+    plan_info = PLAN_LIMITS.get(client.plan, PLAN_LIMITS["free"])
+    existing = db.query(APIKey).filter(APIKey.client_id == client.id, APIKey.is_active == True).count()
+    if existing >= plan_info["api_keys"]:
+        raise HTTPException(status_code=400, detail=f"Your {client.plan} plan allows max {plan_info['api_keys']} API keys. Upgrade to get more.")
+    raw = secrets.token_urlsafe(32)
+    key = f"tzm_live_{raw[:40]}"
+    api_key = APIKey(client_id=client.id, name=data.name, key=key, calls_limit=data.calls_limit or plan_info["calls"])
+    db.add(api_key)
+    db.commit()
+    db.refresh(api_key)
+    return {"id": api_key.id, "name": api_key.name, "key": key, "calls_limit": api_key.calls_limit, "message": "Save this key — it won't be shown again in full"}
+
+@app.get("/api-keys")
+def list_api_keys(client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
+    from database import APIKey
+    keys = db.query(APIKey).filter(APIKey.client_id == client.id).all()
+    return {"keys": [{
+        "id": k.id, "name": k.name,
+        "key_preview": k.key[:12] + "..." + k.key[-4:],  # never expose full key again
+        "is_active": k.is_active, "calls_used": k.calls_used,
+        "calls_limit": k.calls_limit, "last_used": str(k.last_used) if k.last_used else None,
+        "created_at": str(k.created_at)
+    } for k in keys]}
+
+@app.delete("/api-keys/{key_id}")
+def revoke_api_key(key_id: int, client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
+    from database import APIKey
+    key = db.query(APIKey).filter(APIKey.id == key_id, APIKey.client_id == client.id).first()
+    if not key: raise HTTPException(status_code=404, detail="Key not found")
+    key.is_active = False
+    db.commit()
+    return {"message": "API key revoked"}
+
+@app.put("/api-keys/{key_id}/toggle")
+def toggle_api_key(key_id: int, client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
+    from database import APIKey
+    key = db.query(APIKey).filter(APIKey.id == key_id, APIKey.client_id == client.id).first()
+    if not key: raise HTTPException(status_code=404, detail="Key not found")
+    key.is_active = not key.is_active
+    db.commit()
+    return {"is_active": key.is_active}
+
+
+# ===== USAGE LIMITS ENFORCEMENT =====
+
+def check_call_limit(client: Client, db: Session):
+    """Call this before every AI call to enforce plan limits"""
+    plan_info = PLAN_LIMITS.get(client.plan, PLAN_LIMITS["free"])
+    month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0)
+    month_calls = db.query(CallLog).filter(
+        CallLog.client_id == client.id,
+        CallLog.created_at >= month_start
+    ).count()
+    if month_calls >= plan_info["calls"]:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Monthly call limit reached ({plan_info['calls']} calls on {client.plan} plan). Please upgrade."
+        )
+    return month_calls
+
+@app.get("/usage")
+def get_usage(client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
+    plan_info = PLAN_LIMITS.get(client.plan, PLAN_LIMITS["free"])
+    month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0)
+    month_calls = db.query(CallLog).filter(CallLog.client_id == client.id, CallLog.created_at >= month_start).count()
+    total_calls  = db.query(CallLog).filter(CallLog.client_id == client.id).count()
+    from database import APIKey
+    api_keys_count = db.query(APIKey).filter(APIKey.client_id == client.id, APIKey.is_active == True).count()
+    return {
+        "plan": client.plan,
+        "plan_price": plan_info["price"],
+        "calls_this_month": month_calls,
+        "calls_limit": plan_info["calls"],
+        "calls_remaining": max(0, plan_info["calls"] - month_calls),
+        "percent_used": round((month_calls / max(plan_info["calls"], 1)) * 100, 1),
+        "total_calls_ever": total_calls,
+        "api_keys_active": api_keys_count,
+        "api_keys_limit": plan_info["api_keys"],
+    }
+
+
+# ===== RAZORPAY PAYMENT =====
+
+RAZORPAY_KEY_ID     = os.getenv("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
+
+class CreateOrderRequest(BaseModel):
+    plan: str
+
+@app.post("/payment/create-order")
+def create_payment_order(req: CreateOrderRequest, client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
+    if req.plan not in PLAN_LIMITS:
+        raise HTTPException(status_code=400, detail="Invalid plan")
+    plan_info = PLAN_LIMITS[req.plan]
+    if plan_info["price"] == 0:
+        raise HTTPException(status_code=400, detail="Free plan needs no payment")
+    amount_paise = int(plan_info["price"] * 100)  # Razorpay uses paise
+    if RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET:
+        import razorpay
+        rz = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+        order = rz.order.create({"amount": amount_paise, "currency": "INR", "receipt": f"tzm_{client.id}_{req.plan}"})
+        order_id = order["id"]
+    else:
+        # Demo mode — no real Razorpay keys
+        order_id = f"demo_order_{client.id}_{req.plan}_{int(datetime.utcnow().timestamp())}"
+    from database import RazorpayOrder
+    rz_order = RazorpayOrder(client_id=client.id, order_id=order_id, plan=req.plan, amount_inr=plan_info["price"])
+    db.add(rz_order)
+    db.commit()
+    return {
+        "order_id": order_id,
+        "amount": amount_paise,
+        "currency": "INR",
+        "plan": req.plan,
+        "key_id": RAZORPAY_KEY_ID or "demo_mode",
+        "company_name": "Tzmicha AI Voice Engine",
+        "client_email": client.email,
+        "client_name": client.contact_name,
+    }
+
+class VerifyPaymentRequest(BaseModel):
+    order_id: str
+    payment_id: str
+    signature: Optional[str] = ""
+    plan: str
+
+@app.post("/payment/verify")
+def verify_payment(req: VerifyPaymentRequest, client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
+    from database import RazorpayOrder
+    order = db.query(RazorpayOrder).filter(RazorpayOrder.order_id == req.order_id, RazorpayOrder.client_id == client.id).first()
+    if not order: raise HTTPException(status_code=404, detail="Order not found")
+    if RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET and req.signature:
+        import razorpay, hmac, hashlib
+        expected = hmac.new(RAZORPAY_KEY_SECRET.encode(), f"{req.order_id}|{req.payment_id}".encode(), hashlib.sha256).hexdigest()
+        if expected != req.signature:
+            raise HTTPException(status_code=400, detail="Payment verification failed")
+    # Upgrade plan
+    client.plan = req.plan
+    order.status = "paid"
+    order.payment_id = req.payment_id
+    db.commit()
+    return {"message": f"Plan upgraded to {req.plan}", "plan": req.plan}
+
+@app.get("/payment/plans")
+def get_plans_with_pricing():
+    return {"plans": [
+        {"id": "free",       "name": "Free",       "price": 0,     "calls": 50,    "api_keys": 1,   "features": ["50 calls/month", "1 AI Agent", "Basic dashboard", "Call simulator"]},
+        {"id": "starter",   "name": "Starter",    "price": 5000,  "calls": 500,   "api_keys": 2,   "features": ["500 calls/month", "3 AI Agents", "WhatsApp summaries", "2 API keys", "CSV export"]},
+        {"id": "growth",    "name": "Growth",     "price": 15000, "calls": 2000,  "api_keys": 5,   "features": ["2000 calls/month", "10 AI Agents", "5 API keys", "CRM integration", "Priority support"]},
+        {"id": "pro",       "name": "Pro",        "price": 30000, "calls": 5000,  "api_keys": 10,  "features": ["5000 calls/month", "Unlimited agents", "10 API keys", "Real calls (Exotel)", "Dedicated support"]},
+        {"id": "enterprise","name": "Enterprise", "price": 75000, "calls": 15000, "api_keys": 999, "features": ["15000 calls/month", "White label", "Unlimited API keys", "SLA guarantee", "24/7 support"]},
+    ]}
+
+
 # ===== NOTIFICATIONS =====
 
 @app.get("/notifications")
@@ -1088,7 +1399,56 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
     return {"message": "Password reset successful"}
 
 
-# ===== BILLING =====
+# ===== APPOINTMENTS =====
+
+class AppointmentCreate(BaseModel):
+    lead_name: str
+    phone: str
+    date: str
+    time: str
+    agent: str = "AI Agent"
+    apt_type: str = "callback"  # callback | demo | follow-up
+    notes: Optional[str] = None
+
+@app.post("/appointments")
+def create_appointment(data: AppointmentCreate, client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
+    from database import Appointment as ApptModel
+    appt = ApptModel(
+        client_id=client.id, lead_name=data.lead_name, phone=data.phone,
+        date=data.date, time=data.time, agent=data.agent,
+        apt_type=data.apt_type, notes=data.notes
+    )
+    db.add(appt); db.commit(); db.refresh(appt)
+    return {"id": appt.id, "message": "Appointment created"}
+
+@app.get("/appointments")
+def get_appointments(client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
+    from database import Appointment as ApptModel
+    items = db.query(ApptModel).filter(ApptModel.client_id == client.id).order_by(ApptModel.created_at.desc()).all()
+    return {"total": len(items), "appointments": [
+        {"id": a.id, "lead_name": a.lead_name, "phone": a.phone, "date": a.date,
+         "time": a.time, "agent": a.agent, "type": a.apt_type,
+         "status": a.status, "notes": a.notes, "created_at": str(a.created_at)}
+        for a in items
+    ]}
+
+@app.put("/appointments/{appt_id}/status")
+def update_appointment_status(appt_id: int, status: str, client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
+    from database import Appointment as ApptModel
+    appt = db.query(ApptModel).filter(ApptModel.id == appt_id, ApptModel.client_id == client.id).first()
+    if not appt: raise HTTPException(status_code=404, detail="Appointment not found")
+    appt.status = status
+    db.commit()
+    return {"message": "Status updated"}
+
+@app.delete("/appointments/{appt_id}")
+def delete_appointment(appt_id: int, client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
+    from database import Appointment as ApptModel
+    appt = db.query(ApptModel).filter(ApptModel.id == appt_id, ApptModel.client_id == client.id).first()
+    if not appt: raise HTTPException(status_code=404, detail="Appointment not found")
+    db.delete(appt); db.commit()
+    return {"message": "Deleted"}
+
 
 @app.get("/billing/plans")
 def get_plans():
@@ -1100,7 +1460,7 @@ def get_plans():
     ]}
 
 @app.get("/billing/usage")
-def get_usage(client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
+def get_billing_usage(client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
     total_calls = db.query(CallLog).filter(CallLog.client_id == client.id).count()
     plan_limits = {"free": 50, "starter": 500, "growth": 2000, "pro": 5000, "enterprise": 15000}
     limit = plan_limits.get(client.plan, 50)
@@ -1129,6 +1489,13 @@ def run_campaign(campaign_id: int, client: Client = Depends(get_current_client),
         campaign.total_calls += 1
         results.append({"lead_id": lead.id, "lead_name": lead.name, "conversation_id": conv_id})
     db.commit()
+    # Send campaign complete email
+    try:
+        notif_email = os.getenv('SMTP_USER', '')
+        hot = sum(1 for r in results if active_conversations.get(r['conversation_id'], {}).get('category') == 'hot')
+        if notif_email:
+            send_campaign_complete(notif_email, campaign.name, len(results), hot, 0, len(results) - hot)
+    except: pass
     return {"message": f"Campaign started for {len(results)} leads", "count": len(results), "conversations": results}
 
 @app.post("/campaigns/{campaign_id}/assign-leads")
@@ -1183,9 +1550,12 @@ if __name__ == "__main__":
     print("\nStarting AI Caller SaaS Platform v2.0...")
     print(f"API Docs: http://localhost:{PORT}/docs")
     print(f"Server: http://localhost:{PORT}")
-    print(f"Voice Calls: Enabled (Exotel)")
-    print(f"Voice Lab TTS: Edge TTS (Telugu / Hindi / Indian English)")
-    print(f"Voice Lab STT: Whisper (auto-detects Telugu/Hindi/English)")
-    print(f"AI: Groq\n")
-    uvicorn.run(app, host=HOST, port=PORT)
+    import sys
+    uvicorn.run(
+        app, host=HOST, port=PORT,
+        workers=1,
+        loop="asyncio" if sys.platform == "win32" else "uvloop",
+        http="httptools",
+        access_log=False,
+    )
 

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TZMICHA — AI Voice Engine for India</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#05050a; color:#f0f0f8; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+a { text-decoration:none; color:inherit; }
+
+nav { display:flex; align-items:center; justify-content:space-between; padding:18px 60px; border-bottom:1px solid #1e1e30; position:sticky; top:0; background:rgba(5,5,10,0.92); backdrop-filter:blur(12px); z-index:100; }
+.logo { display:flex; align-items:center; gap:10px; }
+.logo-icon { width:32px; height:32px; border-radius:9px; background:linear-gradient(135deg,#7c3aed,#06b6d4); display:flex; align-items:center; justify-content:center; font-size:16px; }
+.logo-name { font-size:16px; font-weight:800; background:linear-gradient(135deg,#a78bfa,#06b6d4); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.nav-links { display:flex; gap:28px; }
+.nav-links a { font-size:13px; color:#55556a; font-weight:500; }
+.nav-links a:hover { color:#f0f0f8; }
+.nav-btns { display:flex; gap:10px; }
+.btn-outline { padding:8px 18px; border-radius:9px; border:1px solid #1e1e30; color:#a0a0b8; font-size:13px; font-weight:600; cursor:pointer; background:none; }
+.btn-fill { padding:8px 20px; border-radius:9px; border:none; background:linear-gradient(135deg,#7c3aed,#06b6d4); color:white; font-size:13px; font-weight:700; cursor:pointer; }
+
+.hero { text-align:center; padding:100px 60px 60px; position:relative; }
+.hero::before { content:''; position:absolute; top:-100px; left:50%; transform:translateX(-50%); width:700px; height:700px; background:radial-gradient(circle,rgba(124,58,237,0.1) 0%,transparent 70%); pointer-events:none; }
+.badge { display:inline-flex; align-items:center; gap:6px; padding:5px 14px; border-radius:999px; background:rgba(124,58,237,0.12); border:1px solid rgba(124,58,237,0.25); font-size:12px; color:#a78bfa; font-weight:700; margin-bottom:24px; }
+.hero h1 { font-size:54px; font-weight:900; letter-spacing:-2px; line-height:1.1; margin-bottom:20px; }
+.hero h1 span { background:linear-gradient(135deg,#a78bfa,#06b6d4); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.hero p { font-size:17px; color:#55556a; max-width:520px; margin:0 auto 36px; line-height:1.7; }
+.hero-btns { display:flex; gap:12px; justify-content:center; margin-bottom:48px; }
+.btn-big { padding:14px 32px; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; border:none; }
+.btn-big-fill { background:linear-gradient(135deg,#7c3aed,#06b6d4); color:white; box-shadow:0 8px 32px rgba(124,58,237,0.3); }
+.btn-big-ghost { background:rgba(255,255,255,0.05); color:#f0f0f8; border:1px solid #1e1e30; }
+.hero-tags { display:flex; justify-content:center; gap:24px; flex-wrap:wrap; }
+.hero-tags span { font-size:12px; color:#33334a; }
+
+.stats { display:flex; justify-content:center; gap:56px; padding:0 60px 72px; }
+.stat-num { font-size:34px; font-weight:900; background:linear-gradient(135deg,#a78bfa,#06b6d4); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.stat-lbl { font-size:12px; color:#33334a; margin-top:4px; }
+
+section { padding:72px 60px; }
+.sec-tag { font-size:11px; font-weight:800; color:#a78bfa; text-transform:uppercase; letter-spacing:2px; text-align:center; margin-bottom:10px; }
+.sec-title { font-size:34px; font-weight:900; letter-spacing:-1px; text-align:center; margin-bottom:10px; }
+.sec-sub { font-size:14px; color:#55556a; text-align:center; max-width:460px; margin:0 auto 44px; line-height:1.7; }
+
+.features { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; max-width:960px; margin:0 auto; }
+.fcard { background:#0e0e1a; border:1px solid #1e1e30; border-radius:16px; padding:22px; }
+.fcard:hover { border-color:rgba(124,58,237,0.3); }
+.ficon { width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:18px; margin-bottom:12px; }
+.fcard h3 { font-size:14px; font-weight:700; margin-bottom:6px; }
+.fcard p { font-size:12px; color:#55556a; line-height:1.6; }
+
+.langs-wrap { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:28px; }
+.lang { padding:8px 18px; border-radius:999px; background:#0e0e1a; border:1px solid #1e1e30; font-size:13px; font-weight:600; }
+
+.pricing { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; max-width:860px; margin:0 auto; }
+.pcard { background:#0e0e1a; border:1px solid #1e1e30; border-radius:16px; padding:26px; position:relative; }
+.pcard.hot { border-color:rgba(124,58,237,0.4); }
+.pop-badge { position:absolute; top:-11px; left:50%; transform:translateX(-50%); background:linear-gradient(135deg,#7c3aed,#06b6d4); color:white; font-size:9px; font-weight:800; padding:3px 12px; border-radius:999px; letter-spacing:1px; white-space:nowrap; }
+.pname { font-size:12px; font-weight:700; color:#55556a; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+.pamount { font-size:32px; font-weight:900; margin-bottom:3px; }
+.pamount span { font-size:13px; color:#55556a; font-weight:400; }
+.pfeats { list-style:none; margin:16px 0; display:flex; flex-direction:column; gap:7px; }
+.pfeats li { font-size:12px; color:#8888aa; display:flex; align-items:center; gap:7px; }
+.pfeats li::before { content:'✓'; color:#7c3aed; font-weight:800; flex-shrink:0; }
+.pbtn { width:100%; padding:10px; border-radius:9px; border:none; font-size:12px; font-weight:700; cursor:pointer; }
+
+.signup-wrap { background:#0e0e1a; border-top:1px solid #1e1e30; border-bottom:1px solid #1e1e30; }
+.signup-box { max-width:460px; margin:0 auto; text-align:center; }
+.signup-box h2 { font-size:30px; font-weight:900; letter-spacing:-1px; margin-bottom:10px; }
+.signup-box p { font-size:13px; color:#55556a; margin-bottom:28px; }
+.sform { display:flex; flex-direction:column; gap:10px; text-align:left; }
+.row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.sinput { width:100%; padding:11px 13px; border-radius:9px; background:#0a0a14; border:1px solid #1e1e30; color:#f0f0f8; font-size:13px; outline:none; box-sizing:border-box; }
+.sinput:focus { border-color:rgba(124,58,237,0.4); }
+.sinput::placeholder { color:#33334a; }
+.sbtn { width:100%; padding:13px; border-radius:10px; border:none; background:linear-gradient(135deg,#7c3aed,#06b6d4); color:white; font-size:14px; font-weight:700; cursor:pointer; margin-top:4px; }
+.snote { font-size:11px; color:#33334a; text-align:center; }
+#form-msg { font-size:13px; text-align:center; margin-top:6px; display:none; }
+
+footer { padding:36px 60px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #1e1e30; }
+.flinks { display:flex; gap:22px; }
+.flinks a { font-size:12px; color:#33334a; }
+.fcopy { font-size:12px; color:#33334a; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><div class="logo-icon">⚡</div><span class="logo-name">TZMICHA</span></div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#languages">Languages</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#signup">Sign Up</a>
+  </div>
+  <div class="nav-btns">
+    <button class="btn-outline" onclick="window.location.href='http://localhost:5173'">Login</button>
+    <button class="btn-fill" onclick="document.getElementById('signup').scrollIntoView({behavior:'smooth'})">Start Free →</button>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="badge">⚡ India's AI Voice Calling Platform</div>
+  <h1>AI Agents That <span>Call,<br>Qualify & Close</span> Leads</h1>
+  <p>Deploy AI voice agents that talk like humans in Telugu, Hindi & English. Qualify 10x more leads at zero cost per call.</p>
+  <div class="hero-btns">
+    <button class="btn-big btn-big-fill" onclick="document.getElementById('signup').scrollIntoView({behavior:'smooth'})">Start Free — No Credit Card</button>
+    <button class="btn-big btn-big-ghost" onclick="window.location.href='http://localhost:5173'">View Demo →</button>
+  </div>
+  <div class="hero-tags">
+    <span>✅ Free tier available</span>
+    <span>✅ Telugu + Hindi + English</span>
+    <span>✅ WhatsApp summaries</span>
+    <span>✅ No setup fees</span>
+  </div>
+</div>
+
+<div class="stats">
+  <div><div class="stat-num">10x</div><div class="stat-lbl">More leads qualified</div></div>
+  <div><div class="stat-num">₹0</div><div class="stat-lbl">Cost per AI call</div></div>
+  <div><div class="stat-num">5</div><div class="stat-lbl">Indian languages</div></div>
+  <div><div class="stat-num">24/7</div><div class="stat-lbl">AI never sleeps</div></div>
+</div>
+
+<section id="features">
+  <div class="sec-tag">Features</div>
+  <h2 class="sec-title">Everything to automate<br>your sales calls</h2>
+  <p class="sec-sub">From AI agents to call intelligence — built for Indian businesses.</p>
+  <div class="features">
+    <div class="fcard"><div class="ficon" style="background:rgba(124,58,237,0.12)">🤖</div><h3>AI Voice Agents</h3><p>Custom agents with your script, voice & goals. Sounds like a real human caller.</p></div>
+    <div class="fcard"><div class="ficon" style="background:rgba(6,182,212,0.12)">🧠</div><h3>Call Intelligence</h3><p>Auto-detect buying signals, objections, intent & emotion on every call.</p></div>
+    <div class="fcard"><div class="ficon" style="background:rgba(37,211,102,0.12)">📱</div><h3>WhatsApp Summaries</h3><p>Call summary auto-sends to your team on WhatsApp in their language.</p></div>
+    <div class="fcard"><div class="ficon" style="background:rgba(251,191,36,0.12)">🔥</div><h3>Lead Scoring</h3><p>AI scores every lead 1-10 and categorizes as Hot 🔥 Warm 🌤️ Cold ❄️.</p></div>
+    <div class="fcard"><div class="ficon" style="background:rgba(248,113,113,0.12)">📊</div><h3>Campaign Management</h3><p>Run bulk campaigns. Track connected rate, qualified leads & conversion.</p></div>
+    <div class="fcard"><div class="ficon" style="background:rgba(167,139,250,0.12)">🔌</div><h3>API Access</h3><p>Full REST API. Integrate with your CRM or app. Generate keys in one click.</p></div>
+  </div>
+</section>
+
+<section id="languages" style="background:#0e0e1a;border-top:1px solid #1e1e30;border-bottom:1px solid #1e1e30;">
+  <div class="sec-tag">Languages</div>
+  <h2 class="sec-title">Speaks how your<br>customers speak</h2>
+  <p class="sec-sub">AI auto-detects language and responds naturally — even in mixed Tenglish or Hinglish.</p>
+  <div class="langs-wrap">
+    <span class="lang">🇮🇳 Telugu</span>
+    <span class="lang">🇮🇳 Hindi</span>
+    <span class="lang">🇬🇧 English</span>
+    <span class="lang">🇮🇳 Tenglish</span>
+    <span class="lang">🇮🇳 Hinglish</span>
+    <span class="lang">🇮🇳 Tamil</span>
+    <span class="lang">🇮🇳 Kannada</span>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="sec-tag">Pricing</div>
+  <h2 class="sec-title">Simple, transparent pricing</h2>
+  <p class="sec-sub">Start free. Scale as you grow. No hidden fees.</p>
+  <div class="pricing">
+    <div class="pcard">
+      <div class="pname">Starter</div>
+      <div class="pamount">₹0 <span>/month</span></div>
+      <ul class="pfeats"><li>50 calls/month</li><li>1 AI Agent</li><li>Call simulator</li><li>1 API key</li></ul>
+      <button class="pbtn" style="background:#1e1e30;color:#f0f0f8" onclick="document.getElementById('signup').scrollIntoView({behavior:'smooth'})">Get Started Free</button>
+    </div>
+    <div class="pcard hot">
+      <div class="pop-badge">MOST POPULAR</div>
+      <div class="pname">Growth</div>
+      <div class="pamount">₹15,000 <span>/month</span></div>
+      <ul class="pfeats"><li>2,000 calls/month</li><li>10 AI Agents</li><li>WhatsApp summaries</li><li>5 API keys</li><li>CRM integration</li></ul>
+      <button class="pbtn" style="background:linear-gradient(135deg,#7c3aed,#06b6d4);color:white" onclick="document.getElementById('signup').scrollIntoView({behavior:'smooth'})">Start Growth Plan</button>
+    </div>
+    <div class="pcard">
+      <div class="pname">Enterprise</div>
+      <div class="pamount">₹75,000 <span>/month</span></div>
+      <ul class="pfeats"><li>15,000 calls/month</li><li>Unlimited agents</li><li>White label</li><li>Unlimited API keys</li><li>24/7 support</li></ul>
+      <button class="pbtn" style="background:#1e1e30;color:#f0f0f8" onclick="document.getElementById('signup').scrollIntoView({behavior:'smooth'})">Contact Sales</button>
+    </div>
+  </div>
+</section>
+
+<section class="signup-wrap" id="signup">
+  <div class="signup-box">
+    <h2>Start your free account</h2>
+    <p>No credit card required. Up and running in 2 minutes.</p>
+    <form class="sform" onsubmit="handleSignup(event)">
+      <div class="row2">
+        <input class="sinput" type="text" id="contact_name" placeholder="Your Name" required />
+        <input class="sinput" type="text" id="company_name" placeholder="Company Name" required />
+      </div>
+      <input class="sinput" type="email" id="email" placeholder="Work Email" required />
+      <input class="sinput" type="tel" id="phone" placeholder="Phone Number" required />
+      <select class="sinput" id="industry">
+        <option value="">Select Industry</option>
+        <option>Real Estate</option><option>Education</option><option>Insurance</option>
+        <option>Healthcare</option><option>Finance</option><option>Recruitment</option>
+        <option>E-commerce</option><option>Other</option>
+      </select>
+      <input class="sinput" type="password" id="password" placeholder="Create Password (min 6 chars)" required minlength="6" />
+      <button type="submit" class="sbtn" id="sbtn">Create Free Account →</button>
+      <p class="snote">By signing up you agree to our Terms. Free plan: 50 calls/month.</p>
+      <p id="form-msg"></p>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div class="logo-name" style="font-size:14px">⚡ TZMICHA</div>
+  <div class="flinks">
+    <a href="#features">Features</a>
+    <a href="#pricing">Pricing</a>
+    <a href="http://localhost:8000/docs" target="_blank">API Docs</a>
+    <a href="mailto:support@tzmicha.com">Support</a>
+  </div>
+  <div class="fcopy">© 2026 TZMICHA · Hyderabad, India</div>
+</footer>
+
+<script>
+const API = window.location.hostname === 'localhost' ? 'http://localhost:8000' : ''
+
+async function handleSignup(e) {
+  e.preventDefault()
+  const btn = document.getElementById('sbtn')
+  const msg = document.getElementById('form-msg')
+  btn.textContent = 'Creating account...'
+  btn.disabled = true
+
+  const data = {
+    contact_name: document.getElementById('contact_name').value.trim(),
+    company_name: document.getElementById('company_name').value.trim(),
+    email:        document.getElementById('email').value.trim(),
+    phone:        document.getElementById('phone').value.trim(),
+    industry:     document.getElementById('industry').value || 'Other',
+    password:     document.getElementById('password').value,
+    product_info: 'AI Voice Calling',
+    ai_name:      'Alex',
+  }
+
+  try {
+    const res  = await fetch(`${API}/auth/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) })
+    const json = await res.json()
+    if (res.ok) {
+      msg.style.color = '#10b981'
+      msg.textContent = '✅ Account created! Redirecting to dashboard...'
+      msg.style.display = 'block'
+      localStorage.setItem('client_id', json.client_id)
+      localStorage.setItem('client_data', JSON.stringify({...data, client_id: json.client_id}))
+      setTimeout(() => window.location.href = 'http://localhost:5173', 1500)
+    } else {
+      msg.style.color = '#f87171'
+      msg.textContent = '❌ ' + (json.detail || 'Registration failed. Try again.')
+      msg.style.display = 'block'
+      btn.textContent = 'Create Free Account →'
+      btn.disabled = false
+    }
+  } catch {
+    msg.style.color = '#f87171'
+    msg.textContent = '❌ Cannot connect to server. Make sure backend is running.'
+    msg.style.display = 'block'
+    btn.textContent = 'Create Free Account →'
+    btn.disabled = false
+  }
+}
+</script>
+</body>
+</html>

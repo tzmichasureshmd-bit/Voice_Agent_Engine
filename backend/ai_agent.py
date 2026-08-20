@@ -48,30 +48,82 @@ def get_ai_response(conversation_history: list, product_info: str = "General pro
 
 
 
-def analyze_sentiment(conversation_history: list) -> dict:
-    analysis_prompt = """Analyze this sales call. Respond ONLY in this JSON format, nothing else:
-{"sentiment": "positive/negative/neutral", "score": 1-10, "category": "hot/warm/cold", "summary": "one line summary"}
+def analyze_sentiment(conversation_history: list, summary_lang: str = "auto") -> dict:
+    # Determine summary language
+    if summary_lang == "en":
+        lang_note = "Generate the summary in English only."
+    elif summary_lang == "te":
+        lang_note = "Generate the summary in Telugu (Telugu-English mix is fine)."
+    elif summary_lang == "hi":
+        lang_note = "Generate the summary in Hindi (Hindi-English mix is fine)."
+    else:  # auto — detect from conversation
+        user_texts = ' '.join(m['content'] for m in conversation_history[-6:] if m.get('role') == 'user')
+        has_telugu = any('\u0c00' <= c <= '\u0c7f' for c in user_texts)
+        has_hindi  = any('\u0900' <= c <= '\u097f' for c in user_texts)
+        if has_telugu:
+            lang_note = "Generate the summary in Telugu (Telugu-English mix is fine)."
+        elif has_hindi:
+            lang_note = "Generate the summary in Hindi (Hindi-English mix is fine)."
+        else:
+            lang_note = "Generate the summary in English."
 
-Scoring guide:
-- 8-10 (hot): Asked about pricing, showed clear interest, wanted demo/meeting
-- 5-7 (warm): Listened but didn't commit, said "maybe", asked to send info
-- 1-4 (cold): Said not interested, was rude, hung up, asked not to call"""
+    analysis_prompt = f"""Analyze this sales call deeply. Respond ONLY in this exact JSON format, nothing else:
+{{
+  "sentiment": "positive/negative/neutral",
+  "score": 1-10,
+  "category": "hot/warm/cold",
+  "summary": "2-3 line summary",
+  "detected_language": "en/te/hi/other",
+  "intent": "one word: interested/not_interested/callback/price_inquiry/demo_request/complaint/wrong_number",
+  "emotion": "one word: excited/positive/neutral/hesitant/frustrated/angry",
+  "buying_signals": ["signal1", "signal2"],
+  "objections": ["objection1", "objection2"],
+  "recommended_action": "one clear action sentence",
+  "follow_up_urgency": "immediate/within_24h/this_week/low_priority",
+  "key_topics": ["topic1", "topic2", "topic3"]
+}}
+
+Scoring:
+- 8-10 (hot): Asked pricing, wanted demo/meeting, clear interest, decision maker
+- 5-7 (warm): Listened, said maybe, asked to send info, needs follow-up
+- 1-4 (cold): Not interested, rude, hung up, wrong number
+
+Buying signals examples: "Asked about pricing", "Requested demo", "Mentioned timeline", "Asked about features"
+Objections examples: "Price too high", "Not the right time", "Need to consult team", "Already have solution"
+
+Summary language rule: {lang_note}"""
 
     messages = conversation_history + [{"role": "user", "content": analysis_prompt}]
-
     try:
         response = client.chat.completions.create(
             model=FAST_MODEL,
-            messages=[{"role": "system", "content": "You analyze sales calls. Respond ONLY in valid JSON."}] + messages,
+            messages=[{"role": "system", "content": "You are an expert sales call analyst. Respond ONLY in valid JSON. Be specific and actionable."}] + messages,
             temperature=0.2,
-            max_tokens=80
+            max_tokens=400
         )
         text = response.choices[0].message.content.strip()
         if "```" in text:
             text = text.split("```")[1].replace("json", "").strip()
-        return json.loads(text)
+        result = json.loads(text)
+        # Ensure all fields exist with defaults
+        result.setdefault("buying_signals", [])
+        result.setdefault("objections", [])
+        result.setdefault("recommended_action", "Follow up with the lead")
+        result.setdefault("follow_up_urgency", "this_week")
+        result.setdefault("intent", "interested")
+        result.setdefault("emotion", "neutral")
+        result.setdefault("key_topics", [])
+        result.setdefault("detected_language", "en")
+        return result
     except Exception as e:
-        return {"sentiment": "neutral", "score": 5, "category": "warm", "summary": f"Analysis failed: {str(e)}"}
+        return {
+            "sentiment": "neutral", "score": 5, "category": "warm",
+            "summary": f"Analysis failed: {str(e)}",
+            "detected_language": "en", "intent": "interested", "emotion": "neutral",
+            "buying_signals": [], "objections": [],
+            "recommended_action": "Follow up with the lead",
+            "follow_up_urgency": "this_week", "key_topics": []
+        }
 
 
 def generate_opening(lead_name: str, product_info: str, ai_name: str = "Alex", company_name: str = "") -> str:

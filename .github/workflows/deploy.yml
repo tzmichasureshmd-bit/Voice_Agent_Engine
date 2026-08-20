@@ -17,19 +17,19 @@ jobs:
           script: |
             set -e
 
-            # Clone on first deploy, pull on subsequent
+            # Clone on first deploy, force reset on subsequent
             if [ ! -d "/opt/voice-ai/.git" ]; then
-               git clone https://github.com/tzmichasureshmd-bit/Voice_Agent_Engine.git /opt/voice-ai
+              git clone https://github.com/tzmichasureshmd-bit/Voice_Agent_Engine.git /opt/voice-ai
             fi
 
             cd /opt/voice-ai
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
 
             # Write .env from GitHub Secret
-            echo "${{ secrets.ENV_PRODUCTION }}" > /opt/voice-ai/.env
+            echo "${{ secrets.ENV_PRODUCTION }}" > /opt/voice-ai/backend/.env
 
             # Build & restart with prod compose
-            cd /opt/voice-ai
             docker compose -f deploy/docker-compose.prod.yml down --remove-orphans
             docker compose -f deploy/docker-compose.prod.yml build --no-cache
             docker compose -f deploy/docker-compose.prod.yml up -d

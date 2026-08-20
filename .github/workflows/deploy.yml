@@ -19,7 +19,7 @@ jobs:
 
             # Clone on first deploy, pull on subsequent
             if [ ! -d "/opt/voice-ai/.git" ]; then
-              git clone https://github.com/tzmichasureshmd-bit/AI_OS.git /opt/voice-ai
+               git clone https://github.com/tzmichasureshmd-bit/Voice_Agent_Engine.git /opt/voice-ai
             fi
 
             cd /opt/voice-ai

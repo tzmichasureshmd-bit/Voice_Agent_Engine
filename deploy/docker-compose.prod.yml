@@ -10,17 +10,6 @@ services:
     restart: unless-stopped
     env_file:
       - .env.production
-    environment:
-      - GROQ_API_KEY=${GROQ_API_KEY}
-      - DATABASE_URL=${DATABASE_URL}
-      - SERVER_PUBLIC_URL=https://voice.tzmicha.com
-      - EXOTEL_SID=${EXOTEL_SID}
-      - EXOTEL_API_KEY=${EXOTEL_API_KEY}
-      - EXOTEL_API_TOKEN=${EXOTEL_API_TOKEN}
-      - EXOTEL_CALLER_ID=${EXOTEL_CALLER_ID}
-      - HUMAN_AGENT_NUMBER=${HUMAN_AGENT_NUMBER}
-      - WHISPER_MODEL=${WHISPER_MODEL}
-      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
     volumes:
       - voice_data:/app/data
       - tts_models:/root/.local/share/tts
@@ -28,9 +17,10 @@ services:
       - voice-net
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]
-      interval: 15s
-      timeout: 10s
+      interval: 30s
+      timeout: 15s
       retries: 5
+      start_period: 60s
 
   voice-frontend:
     build:
@@ -39,8 +29,7 @@ services:
     container_name: voice-frontend
     restart: unless-stopped
     depends_on:
-      voice-backend:
-        condition: service_healthy
+      - voice-backend
     networks:
       - voice-net
       - traefik-net

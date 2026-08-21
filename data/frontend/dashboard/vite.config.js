@@ -8,8 +8,8 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
-      devOptions: { enabled: true },
+      registerType: 'prompt',
+      devOptions: { enabled: false },
       includeAssets: ['favicon.png', 'favicon.svg', 'voice_logo.jpeg', 'icon-192.png', 'icon-512.png'],
       manifest: {
         name: 'TZMICHA ENGINE',
@@ -28,10 +28,12 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpeg,woff2}'],
+        navigateFallback: 'index.html',
         runtimeCaching: [
-          { urlPattern: /^http:\/\/localhost:8000\/.*/,
-            handler: 'NetworkFirst',
-            options: { cacheName: 'api-cache', networkTimeoutSeconds: 5 } }
+          {
+            urlPattern: /^\/api\/.*/,
+            handler: 'NetworkOnly'   // never cache API calls
+          }
         ]
       }
     })

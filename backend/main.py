@@ -14,7 +14,13 @@ from datetime import datetime
 import hashlib, json, time
 
 from database import init_db, get_db, Client, User, Lead, CallLog, Campaign
-from ai_agent import get_ai_response, analyze_sentiment, generate_opening
+try:
+    from ai_agent import get_ai_response, analyze_sentiment, generate_opening
+except Exception as _ai_err:
+    print(f"WARNING: ai_agent load failed: {_ai_err}")
+    def get_ai_response(h, p): return "I'll get back to you shortly."
+    def analyze_sentiment(h, **kw): return {"sentiment": "neutral", "score": 5, "category": "warm", "summary": ""}
+    def generate_opening(n, p, **kw): return f"Hi {n}, how are you today?"
 from lead_scorer import score_lead_from_keywords, get_lead_recommendation
 try:
     from voice_caller import (
@@ -72,7 +78,7 @@ class ClientRegister(BaseModel):
     phone: str
     password: str
     product_info: str
-    ai_name: Optional[str] = "Alex"
+    ai_name: Optional[str] = "Misha"
 
 class ClientLogin(BaseModel):
     email: str
@@ -121,7 +127,7 @@ def register(data: ClientRegister, db: Session = Depends(get_db)):
         phone=data.phone,
         password=hash_password(data.password),
         product_info=data.product_info,
-        ai_name=data.ai_name or "Alex"
+        ai_name=data.ai_name or "Misha"
     )
     db.add(client)
     db.commit()
@@ -167,7 +173,7 @@ def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
             company_name=name, industry="other", contact_name=name,
             email=email, phone="",
             password=hash_password(email + "google_oauth"),
-            product_info="", ai_name="Alex"
+            product_info="", ai_name="Misha"
         )
         db.add(client)
         db.commit()
@@ -176,10 +182,15 @@ def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
 
 @app.post("/auth/login")
 def login(data: ClientLogin, db: Session = Depends(get_db)):
-    client = db.query(Client).filter(Client.email == data.email, Client.password == hash_password(data.password)).first()
-    if not client:
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-    return {"client_id": client.id, "company_name": client.company_name, "contact_name": client.contact_name, "industry": client.industry, "product_info": client.product_info, "ai_name": client.ai_name}
+    try:
+        client = db.query(Client).filter(Client.email == data.email, Client.password == hash_password(data.password)).first()
+        if not client:
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        return {"client_id": client.id, "company_name": client.company_name, "contact_name": client.contact_name, "industry": client.industry, "product_info": client.product_info, "ai_name": client.ai_name}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Login error: {str(e)[:120]}")
 
 @app.post("/auth/team-login")
 def team_login(data: ClientLogin, db: Session = Depends(get_db)):
@@ -258,7 +269,7 @@ def start_call(request: CallRequest, client: Client = Depends(get_current_client
     if not lead: raise HTTPException(status_code=404, detail="Lead not found")
 
     product_info = client.product_info or "General product"
-    opening = generate_opening(lead.name, product_info, ai_name=client.ai_name or "Alex", company_name=client.company_name or "")
+    opening = generate_opening(lead.name, product_info, ai_name=client.ai_name or "Misha", company_name=client.company_name or "")
 
     conversation_id = f"call_{client.id}_{lead.id}_{int(datetime.now().timestamp())}"
     active_conversations[conversation_id] = {
@@ -492,7 +503,26 @@ def get_all_clients(admin_key: str = Header(None, alias="x-admin-key"), db: Sess
     if admin_key != os.getenv("ADMIN_KEY", "superadmin123"):
         raise HTTPException(status_code=403, detail="Admin access only")
     clients = db.query(Client).all()
-    return {"total": len(clients), "clients": [{"id": c.id, "company": c.company_name, "industry": c.industry, "email": c.email, "plan": c.plan, "total_calls": c.total_calls, "is_active": c.is_active, "created": str(c.created_at)} for c in clients]}
+    # Count actual call logs per client — don't trust stored counter
+    call_counts = {}
+    for c in clients:
+        call_counts[c.id] = db.query(CallLog).filter(CallLog.client_id == c.id).count()
+    team_counts = {}
+    for c in clients:
+        team_counts[c.id] = db.query(User).filter(User.client_id == c.id).count()
+    return {"total": len(clients), "clients": [{
+        "id": c.id,
+        "company": c.company_name,
+        "industry": c.industry,
+        "contact_name": c.contact_name,
+        "email": c.email,
+        "phone": c.phone,
+        "plan": c.plan,
+        "total_calls": call_counts.get(c.id, 0),
+        "team_count": team_counts.get(c.id, 0),
+        "is_active": c.is_active,
+        "created": str(c.created_at)
+    } for c in clients]}
 
 @app.put("/admin/clients/{client_id}/plan")
 def change_plan(client_id: int, plan: str, admin_key: str = Header(None, alias="x-admin-key"), db: Session = Depends(get_db)):
@@ -521,6 +551,61 @@ def admin_reset_password(client_id: int, new_password: str, admin_key: str = Hea
     client.password = hash_password(new_password)
     db.commit()
     return {"message": f"Password reset for {client.company_name}"}
+
+@app.get("/admin/stats")
+def admin_stats(admin_key: str = Header(None, alias="x-admin-key"), db: Session = Depends(get_db)):
+    if admin_key != os.getenv("ADMIN_KEY", "superadmin123"): raise HTTPException(status_code=403, detail="Admin access only")
+    clients = db.query(Client).all()
+    total_calls = db.query(CallLog).count()
+    total_leads = db.query(Lead).count()
+    hot  = db.query(Lead).filter(Lead.category == "hot").count()
+    warm = db.query(Lead).filter(Lead.category == "warm").count()
+    cold = db.query(Lead).filter(Lead.category == "cold").count()
+    plan_prices = {"free":0,"starter":5000,"growth":15000,"pro":30000,"enterprise":75000}
+    mrr = sum(plan_prices.get(c.plan,0) for c in clients if c.is_active)
+    return {
+        "total_clients": len(clients),
+        "active_clients": sum(1 for c in clients if c.is_active),
+        "paid_clients": sum(1 for c in clients if c.plan != "free" and c.is_active),
+        "mrr": mrr,
+        "arr": mrr * 12,
+        "total_calls": total_calls,
+        "total_leads": total_leads,
+        "hot_leads": hot,
+        "warm_leads": warm,
+        "cold_leads": cold,
+        "plan_breakdown": {p: sum(1 for c in clients if c.plan == p) for p in plan_prices},
+    }
+
+@app.get("/admin/calls")
+def admin_all_calls(admin_key: str = Header(None, alias="x-admin-key"), db: Session = Depends(get_db), limit: int = 100):
+    if admin_key != os.getenv("ADMIN_KEY", "superadmin123"): raise HTTPException(status_code=403, detail="Admin access only")
+    calls = db.query(CallLog).order_by(CallLog.created_at.desc()).limit(limit).all()
+    clients_map = {c.id: c.company_name for c in db.query(Client).all()}
+    return {"total": len(calls), "calls": [{
+        "id": c.id, "client_id": c.client_id,
+        "company": clients_map.get(c.client_id, "Unknown"),
+        "lead_name": c.lead_name, "phone": c.phone,
+        "duration_seconds": c.duration_seconds,
+        "sentiment": c.sentiment, "lead_score": c.lead_score,
+        "category": c.category, "summary": c.summary,
+        "call_status": c.call_status,
+        "direction": getattr(c, "direction", "outbound") or "outbound",
+        "created_at": str(c.created_at),
+    } for c in calls]}
+
+@app.get("/admin/leads")
+def admin_all_leads(admin_key: str = Header(None, alias="x-admin-key"), db: Session = Depends(get_db), limit: int = 200):
+    if admin_key != os.getenv("ADMIN_KEY", "superadmin123"): raise HTTPException(status_code=403, detail="Admin access only")
+    leads = db.query(Lead).order_by(Lead.created_at.desc()).limit(limit).all()
+    clients_map = {c.id: c.company_name for c in db.query(Client).all()}
+    return {"total": len(leads), "leads": [{
+        "id": l.id, "client_id": l.client_id,
+        "company": clients_map.get(l.client_id, "Unknown"),
+        "name": l.name, "phone": l.phone, "email": l.email,
+        "score": l.score, "category": l.category, "status": l.status,
+        "created_at": str(l.created_at),
+    } for l in leads]}
 
 
 # ===== AI URL ANALYZER (Auto-generate script from website) =====
@@ -626,7 +711,7 @@ def initiate_voice_call(req: VoiceCallRequest,
     if not lead.phone: raise HTTPException(status_code=400, detail="Lead has no phone number")
 
     opening = generate_opening(lead.name, client.product_info or "our services",
-                               ai_name=client.ai_name or "Swetha",
+                               ai_name=client.ai_name or "Misha",
                                company_name=client.company_name or "")
     result = make_outgoing_call(
         phone_number          = lead.phone,
@@ -900,7 +985,7 @@ from orchestrator import create_session, get_session, end_session, process_turn,
 import uuid
 
 class SessionStartRequest(BaseModel):
-    agent_name:   str = "Alex"
+    agent_name:   str = "Misha"
     product_info: str = ""
     script:       str = ""
     goals:        str = ""
@@ -1477,7 +1562,7 @@ def run_campaign(campaign_id: int, client: Client = Depends(get_current_client),
     if not leads: return {"message": "No new leads to call", "count": 0}
     results = []
     for lead in leads:
-        opening = generate_opening(lead.name, campaign.product_info, ai_name=client.ai_name or "Alex", company_name=client.company_name or "")
+        opening = generate_opening(lead.name, campaign.product_info, ai_name=client.ai_name or "Misha", company_name=client.company_name or "")
         conv_id = f"camp_{campaign.id}_{lead.id}_{int(datetime.now().timestamp())}"
         active_conversations[conv_id] = {
             "client_id": client.id, "lead_id": lead.id, "lead_name": lead.name,
@@ -1542,6 +1627,88 @@ async def voicelab_stt_tzmicha(file: UploadFile = File(...), client: Client = De
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# ===== ADMIN CLIENT DETAIL =====
+
+@app.get("/admin/clients/{client_id}/detail")
+def admin_client_detail(client_id: int, admin_key: str = Header(None, alias="x-admin-key"), db: Session = Depends(get_db)):
+    if admin_key != os.getenv("ADMIN_KEY", "superadmin123"): raise HTTPException(status_code=403, detail="Admin access only")
+    client = db.query(Client).filter(Client.id == client_id).first()
+    if not client: raise HTTPException(status_code=404, detail="Client not found")
+    team  = db.query(User).filter(User.client_id == client_id).all()
+    calls = db.query(CallLog).filter(CallLog.client_id == client_id).order_by(CallLog.created_at.desc()).all()
+    leads = db.query(Lead).filter(Lead.client_id == client_id).all()
+    total_calls    = len(calls)
+    inbound_calls  = sum(1 for c in calls if getattr(c, 'direction', 'outbound') == 'inbound')
+    outbound_calls = total_calls - inbound_calls
+    avg_dur = int(sum(c.duration_seconds or 0 for c in calls) / max(total_calls, 1))
+    total_min = sum(c.duration_seconds or 0 for c in calls) // 60
+    from database import RazorpayOrder
+    payments = db.query(RazorpayOrder).filter(RazorpayOrder.client_id == client_id).order_by(RazorpayOrder.created_at.desc()).all()
+    total_paid = sum(p.amount_inr or 0 for p in payments if p.status == 'paid')
+    from datetime import timedelta
+    monthly = []
+    now = datetime.utcnow()
+    for i in range(5, -1, -1):
+        ms = (now.replace(day=1) - timedelta(days=i*30)).replace(day=1, hour=0, minute=0, second=0)
+        me = (ms + timedelta(days=32)).replace(day=1)
+        cnt = sum(1 for c in calls if c.created_at and ms <= c.created_at < me)
+        monthly.append({"month": ms.strftime("%b %Y"), "calls": cnt})
+    plan_prices = {"free":0,"starter":5000,"growth":15000,"pro":30000,"enterprise":75000}
+    return {
+        "company": {"id": client.id, "name": client.company_name, "industry": client.industry, "contact_name": client.contact_name, "email": client.email, "phone": client.phone, "plan": client.plan, "is_active": client.is_active, "ai_name": client.ai_name, "product_info": client.product_info, "joined": str(client.created_at), "monthly_value": plan_prices.get(client.plan, 0)},
+        "team": [{"id": u.id, "name": u.name, "email": u.email, "role": u.role, "permissions": u.permissions, "is_active": u.is_active} for u in team],
+        "call_stats": {"total": total_calls, "inbound": inbound_calls, "outbound": outbound_calls, "inbound_pct": round(inbound_calls/max(total_calls,1)*100,1), "outbound_pct": round(outbound_calls/max(total_calls,1)*100,1), "hot": sum(1 for c in calls if c.category=='hot'), "warm": sum(1 for c in calls if c.category=='warm'), "cold": sum(1 for c in calls if c.category=='cold'), "avg_duration_sec": avg_dur, "total_duration_min": total_min},
+        "recent_calls": [{"id": c.id, "lead_name": c.lead_name, "duration": c.duration_seconds, "score": c.lead_score, "category": c.category, "sentiment": c.sentiment, "direction": getattr(c,'direction','outbound') or 'outbound', "status": c.call_status, "date": str(c.created_at)} for c in calls[:20]],
+        "leads": {"total": len(leads), "hot": sum(1 for l in leads if l.category=='hot'), "warm": sum(1 for l in leads if l.category=='warm'), "cold": sum(1 for l in leads if l.category=='cold')},
+        "payments": [{"order_id": p.order_id, "plan": p.plan, "amount": p.amount_inr, "status": p.status, "date": str(p.created_at)} for p in payments],
+        "total_paid": total_paid,
+        "monthly_usage": monthly,
+    }
+
+
+# ===== SUPER ADMIN EXTRA ENDPOINTS =====
+
+@app.get("/admin/campaigns")
+def admin_all_campaigns(admin_key: str = Header(None, alias="x-admin-key"), db: Session = Depends(get_db)):
+    if admin_key != os.getenv("ADMIN_KEY", "superadmin123"): raise HTTPException(status_code=403)
+    campaigns = db.query(Campaign).order_by(Campaign.created_at.desc()).all()
+    clients_map = {c.id: c.company_name for c in db.query(Client).all()}
+    return {"total": len(campaigns), "campaigns": [{
+        "id": c.id, "client_id": c.client_id,
+        "company": clients_map.get(c.client_id, "Unknown"),
+        "name": c.name, "total_calls": c.total_calls,
+        "created_at": str(c.created_at)
+    } for c in campaigns]}
+
+@app.get("/admin/ai-employees")
+def admin_all_employees(admin_key: str = Header(None, alias="x-admin-key"), db: Session = Depends(get_db)):
+    if admin_key != os.getenv("ADMIN_KEY", "superadmin123"): raise HTTPException(status_code=403)
+    from database import AIEmployee
+    emps = db.query(AIEmployee).order_by(AIEmployee.created_at.desc()).all()
+    clients_map = {c.id: c.company_name for c in db.query(Client).all()}
+    return {"total": len(emps), "employees": [{
+        "id": e.id, "client_id": e.client_id,
+        "company": clients_map.get(e.client_id, "Unknown"),
+        "name": e.name, "role": e.role, "industry": e.industry,
+        "status": e.status, "total_calls": e.total_calls,
+        "leads_qualified": e.leads_qualified,
+        "created_at": str(e.created_at)
+    } for e in emps]}
+
+@app.get("/admin/payments")
+def admin_all_payments(admin_key: str = Header(None, alias="x-admin-key"), db: Session = Depends(get_db)):
+    if admin_key != os.getenv("ADMIN_KEY", "superadmin123"): raise HTTPException(status_code=403)
+    orders = db.query(RazorpayOrder).order_by(RazorpayOrder.created_at.desc()).all()
+    clients_map = {c.id: c.company_name for c in db.query(Client).all()}
+    total_revenue = sum(o.amount_inr or 0 for o in orders if o.status == "paid")
+    return {"total": len(orders), "total_revenue": total_revenue, "payments": [{
+        "id": o.id, "client_id": o.client_id,
+        "company": clients_map.get(o.client_id, "Unknown"),
+        "order_id": o.order_id, "plan": o.plan,
+        "amount": o.amount_inr, "status": o.status,
+        "created_at": str(o.created_at)
+    } for o in orders]}
 
 # ===== RUN =====
 

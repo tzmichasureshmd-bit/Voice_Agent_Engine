@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { ThemeProvider } from './ThemeContext'
 import Login from './components/Login'
+import { getGoogleRedirectResult } from './firebase'
+import axios from 'axios'
+
+const API = window.location.hostname === 'localhost' ? 'http://localhost:8000' : '/api'
 import AppShell from './components/AppShell'
 import Dashboard from './components/Dashboard'
 import Leads from './components/Leads'
@@ -54,6 +58,17 @@ function App() {
     try { return JSON.parse(localStorage.getItem('client_data') || '{}') } catch { return {} }
   })
   const [showAdmin, setShowAdmin] = useState(false)
+
+  // Handle Google redirect result (mobile / popup-blocked fallback)
+  useEffect(() => {
+    getGoogleRedirectResult().then(async (result) => {
+      if (!result) return
+      try {
+        const res = await axios.post(`${API}/auth/google`, { id_token: result.idToken })
+        handleLogin(res.data)
+      } catch (e) { console.error('Google redirect login failed', e) }
+    }).catch(() => {})
+  }, [])
 
   const handleLogin = (data) => {
     localStorage.setItem('client_id', data.client_id || data.id || '')
@@ -122,18 +137,18 @@ function App() {
     }
   }
 
-  if (!loggedIn) {
+  if (showAdmin) {
     return (
       <ThemeProvider>
-        <Login onLogin={handleLogin} onAdmin={() => setShowAdmin(true)} />
+        <AdminPanel onBack={() => setShowAdmin(false)} />
       </ThemeProvider>
     )
   }
 
-  if (showAdmin) {
+  if (!loggedIn) {
     return (
       <ThemeProvider>
-        <AdminPanel onBack={() => { setShowAdmin(false) }} />
+        <Login onLogin={handleLogin} onAdmin={() => setShowAdmin(true)} />
       </ThemeProvider>
     )
   }

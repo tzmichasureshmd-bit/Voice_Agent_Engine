@@ -166,7 +166,11 @@ def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
         if not email:
             raise HTTPException(status_code=400, detail="No email from Google")
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Invalid Google token: {str(e)[:80]}")
+        err_msg = str(e)
+        print(f"[Google Auth] Token verify failed: {err_msg}")
+        if "app_not_found" in err_msg or "project" in err_msg.lower():
+            raise HTTPException(status_code=401, detail="Firebase project mismatch — check serviceAccountKey.json matches project 'tzmicha-ai-voice'")
+        raise HTTPException(status_code=401, detail=f"Invalid Google token: {err_msg[:120]}")
     client = db.query(Client).filter(Client.email == email).first()
     if not client:
         client = Client(
@@ -190,6 +194,7 @@ def login(data: ClientLogin, db: Session = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
+        print(f"[login] DB error: {e}")
         raise HTTPException(status_code=500, detail=f"Login error: {str(e)[:120]}")
 
 @app.post("/auth/team-login")

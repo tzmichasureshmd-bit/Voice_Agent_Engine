@@ -28,7 +28,18 @@ WARM_LEAD_SCORE = 4
 COLD_LEAD_SCORE = 0
 
 # Database — Supabase in prod, SQLite fallback for local dev
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/leads.db")
+_raw_db_url = os.getenv("DATABASE_URL", "sqlite:///./data/leads.db")
+if _raw_db_url.startswith("postgres://"):
+    _raw_db_url = _raw_db_url.replace("postgres://", "postgresql://", 1)
+# If password contains literal '@', re-encode it so SQLAlchemy parses the host correctly
+if _raw_db_url.startswith("postgresql://") and _raw_db_url.count("@") > 1:
+    from urllib.parse import quote_plus
+    # Extract and re-encode: postgresql://user:password@host/db
+    _rest = _raw_db_url[len("postgresql://"):]
+    _userinfo, _hostpart = _rest.rsplit("@", 1)   # split on LAST @
+    _user, _pass = _userinfo.split(":", 1)
+    _raw_db_url = f"postgresql://{_user}:{quote_plus(_pass)}@{_hostpart}"
+DATABASE_URL = _raw_db_url
 
 # Branding
 COMPANY_NAME = os.getenv("COMPANY_NAME", "TZMICHA")

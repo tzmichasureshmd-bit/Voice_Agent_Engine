@@ -122,8 +122,8 @@ export default function Leads() {
                   boxShadow:`0 0 0 1px rgba(${g},0.04), 0 8px 24px rgba(0,0,0,0.3)`,
                   transition:'all 0.2s', cursor:'default',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor=`rgba(${g},0.4)`; e.currentTarget.style.boxShadow=`0 0 0 1px rgba(${g},0.1), 0 16px 40px rgba(0,0,0,0.4), 0 0 20px rgba(${g},0.06)` }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor=`rgba(${g},0.18)`; e.currentTarget.style.boxShadow=`0 0 0 1px rgba(${g},0.04), 0 8px 24px rgba(0,0,0,0.3)` }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor=`rgba(${g},0.4)`; e.currentTarget.style.boxShadow=`0 0 0 1px rgba(${g},0.1), 0 16px 40px rgba(0,0,0,0.15), 0 0 20px rgba(${g},0.06)` }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor=`rgba(${g},0.18)`; e.currentTarget.style.boxShadow=`0 0 0 1px rgba(${g},0.04), 0 8px 24px rgba(0,0,0,0.08)` }}
               >
                 {/* Top row */}
                 <div style={{ display:'flex', alignItems:'center', gap:'12px', marginBottom:'14px' }}>

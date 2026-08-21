@@ -44,11 +44,11 @@ function Tooltip({ label, children }) {
             style={{
               position: 'absolute', top: 'calc(100% + 10px)', left: '50%',
               transform: 'translateX(-50%)',
-              background: '#0a0a14', color: 'rgba(255,255,255,0.9)',
+              background: 'var(--bg-card)', color: 'var(--text-primary)',
               fontSize: '11px', fontWeight: '600', padding: '5px 12px',
               borderRadius: '8px', whiteSpace: 'nowrap', pointerEvents: 'none',
-              border: '1px solid rgba(124,58,237,0.25)', zIndex: 99999,
-              boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+              border: '1px solid var(--accent-border)', zIndex: 99999,
+              boxShadow: 'var(--shadow)',
             }}
           >{label}</motion.div>
         )}
@@ -95,12 +95,15 @@ export default function AppShell({ navItems = [], activeTab, setActiveTab, onLog
           <div style={{
             display: 'flex', alignItems: 'center', gap: '8px',
             padding: '4px 14px 4px 8px', marginRight: '6px',
-            borderRight: '1px solid rgba(124,58,237,0.2)', flexShrink: 0,
+            borderRight: `1px solid ${theme === 'dark' ? 'rgba(0,0,0,0.1)' : 'rgba(64,224,208,0.3)'}`,
+            flexShrink: 0,
           }}>
-            <img src={voiceLogo} alt="TZMICHA" style={{ width: '26px', height: '26px', borderRadius: '8px', objectFit: 'cover', boxShadow: '0 0 12px rgba(124,58,237,0.5)' }} />
+            <img src={voiceLogo} alt="TZMICHA" style={{ width: '26px', height: '26px', borderRadius: '8px', objectFit: 'cover' }} />
             <span style={{
               fontSize: '12px', fontWeight: '800', letterSpacing: '-0.3px',
-              background: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
+              background: theme === 'dark'
+                ? 'linear-gradient(135deg, #7c3aed, #5b21b6)'
+                : 'linear-gradient(135deg, #40e0d0, #20c8b8)',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
             }}>TZMICHA</span>
           </div>
@@ -114,23 +117,39 @@ export default function AppShell({ navItems = [], activeTab, setActiveTab, onLog
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setActiveTab(item.id)}
                   className={`appshell-nav-btn${active ? ' active' : ''}`}
-                  style={{ padding: '8px 12px', minWidth: '44px', justifyContent: 'center' }}
+                  style={{
+                    padding: '8px',
+                    width: '40px', height: '40px',
+                    borderRadius: '50%',
+                    justifyContent: 'center',
+                    background: active
+                      ? (theme === 'dark' ? 'rgba(124,58,237,0.15)' : 'rgba(64,224,208,0.15)')
+                      : 'transparent',
+                    color: active
+                      ? (theme === 'dark' ? '#7c3aed' : '#40e0d0')
+                      : (theme === 'dark' ? '#3a3a5c' : '#3a3a5c'),
+                    border: 'none',
+                    transition: 'all 0.18s',
+                  }}
                 >
                   <item.icon size={19} strokeWidth={active ? 2.2 : 1.7} />
-                  {active && (
-                    <motion.div layoutId="nav-active-ring" className="appshell-active-ring" />
-                  )}
                 </motion.button>
               </Tooltip>
             )
           })}
 
-          <div className="appshell-divider" />
+          <div style={{ width: '1px', height: '20px', background: theme === 'dark' ? 'rgba(0,0,0,0.12)' : 'rgba(64,224,208,0.4)', margin: '0 4px', flexShrink: 0 }} />
 
           {/* Theme */}
           <Tooltip label={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}>
             <motion.button whileTap={{ scale: 0.9 }} onClick={toggleTheme}
-              className="appshell-icon-btn" style={{ padding: '8px 10px' }}>
+              style={{
+                width: '40px', height: '40px', borderRadius: '50%', border: 'none',
+                background: 'transparent', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: theme === 'dark' ? '#3a3a5c' : '#40e0d0',
+                transition: 'all 0.2s',
+              }}>
               {theme === 'dark'
                 ? <Sun  size={18} strokeWidth={1.7} />
                 : <Moon size={18} strokeWidth={1.7} />}
@@ -142,13 +161,19 @@ export default function AppShell({ navItems = [], activeTab, setActiveTab, onLog
             ref={moreBtnRef}
             whileTap={{ scale: 0.9 }}
             onClick={openMenu}
-            className={`appshell-nav-btn${moreOpen || isMoreActive ? ' active' : ''}`}
-            style={{ padding: '8px 12px', minWidth: '44px', justifyContent: 'center' }}
+            style={{
+              width: '40px', height: '40px', borderRadius: '50%', border: 'none',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: (moreOpen || isMoreActive)
+                ? (theme === 'dark' ? 'rgba(124,58,237,0.15)' : 'rgba(64,224,208,0.15)')
+                : 'transparent',
+              color: (moreOpen || isMoreActive)
+                ? (theme === 'dark' ? '#7c3aed' : '#40e0d0')
+                : (theme === 'dark' ? '#3a3a5c' : '#3a3a5c'),
+              transition: 'all 0.18s',
+            }}
           >
             <MoreHorizontal size={19} strokeWidth={1.7} />
-            {(moreOpen || isMoreActive) && (
-              <motion.div layoutId="nav-active-ring-more" className="appshell-active-ring" />
-            )}
           </motion.button>
         </motion.nav>
       </div>
@@ -166,24 +191,24 @@ export default function AppShell({ navItems = [], activeTab, setActiveTab, onLog
               position: 'fixed', top: '62px', left: '50%',
               transform: 'translateX(-50%)',
               zIndex: 99999, width: '300px',
-              background: '#0e0e1a',
-              border: '1px solid rgba(124,58,237,0.2)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--accent-border)',
               borderRadius: '20px', padding: '6px',
-              boxShadow: '0 4px 6px rgba(0,0,0,0.1), 0 24px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(124,58,237,0.06)',
+              boxShadow: 'var(--shadow-card)',
             }}
           >
             {/* User header — matches nav dark */}
             <div style={{
               display: 'flex', alignItems: 'center', gap: '12px',
               padding: '12px 14px 14px',
-              background: '#0a0a14',
+              background: 'var(--bg-secondary)',
               borderRadius: '15px 15px 0 0',
-              borderBottom: '1px solid rgba(124,58,237,0.12)',
+              borderBottom: '1px solid var(--accent-border)',
               margin: '-6px -6px 6px -6px',
             }}>
               <img src={voiceLogo} alt="TZMICHA" style={{ width: '36px', height: '36px', borderRadius: '10px', objectFit: 'cover', flexShrink: 0, boxShadow: '0 4px 14px rgba(124,58,237,0.4)' }} />
               <div style={{ minWidth: 0 }}>
-                <p style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.92)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {companyName}
                 </p>
                 <p style={{ fontSize: '10px', color: '#a78bfa', fontWeight: '600', marginTop: '1px' }}>
@@ -198,7 +223,7 @@ export default function AppShell({ navItems = [], activeTab, setActiveTab, onLog
 
             {/* Pages */}
             <div style={{ padding: '2px 0' }}>
-              <p style={{ fontSize: '9px', fontWeight: '700', color: 'rgba(124,58,237,0.5)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '4px 12px 8px' }}>Pages</p>
+              <p style={{ fontSize: '9px', fontWeight: '700', color: 'var(--accent-light)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '4px 12px 8px' }}>Pages</p>
               {MORE_REAL.map(item => {
                 const active = activeTab === item.id
                 return (
@@ -208,23 +233,23 @@ export default function AppShell({ navItems = [], activeTab, setActiveTab, onLog
                       display: 'flex', alignItems: 'center', gap: '12px',
                       width: '100%', padding: '9px 12px', borderRadius: '11px',
                       border: 'none', cursor: 'pointer', textAlign: 'left',
-                      background: active ? 'rgba(124,58,237,0.12)' : 'transparent',
+                      background: active ? 'var(--accent-bg)' : 'transparent',
                       transition: 'background 0.14s',
                     }}
-                    onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = active ? 'rgba(124,58,237,0.12)' : 'transparent' }}
+                    onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--bg-card-hover)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = active ? 'var(--accent-bg)' : 'transparent' }}
                   >
                     <div style={{
                       width: '32px', height: '32px', borderRadius: '9px', flexShrink: 0,
-                      background: active ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.05)',
-                      border: active ? '1px solid rgba(124,58,237,0.3)' : '1px solid rgba(255,255,255,0.07)',
+                      background: active ? 'var(--accent-bg)' : 'var(--bg-input)',
+                      border: active ? '1px solid var(--accent-border)' : '1px solid var(--border)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      <item.icon size={14} color={active ? '#a78bfa' : 'rgba(255,255,255,0.4)'} strokeWidth={active ? 2.2 : 1.8} />
+                      <item.icon size={14} color={active ? 'var(--accent-light)' : 'var(--text-muted)'} strokeWidth={active ? 2.2 : 1.8} />
                     </div>
                     <div>
-                      <p style={{ fontSize: '13px', fontWeight: '600', color: active ? '#a78bfa' : 'rgba(255,255,255,0.85)', lineHeight: 1.2 }}>{item.label}</p>
-                      <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.25)', marginTop: '2px' }}>{item.desc}</p>
+                      <p style={{ fontSize: '13px', fontWeight: '600', color: active ? 'var(--accent-light)' : 'var(--text-primary)', lineHeight: 1.2 }}>{item.label}</p>
+                      <p style={{ fontSize: '10px', color: 'var(--text-dim)', marginTop: '2px' }}>{item.desc}</p>
                     </div>
                     {active && (
                       <div style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', background: '#a78bfa', boxShadow: '0 0 8px #a78bfa' }} />
@@ -254,19 +279,19 @@ export default function AppShell({ navItems = [], activeTab, setActiveTab, onLog
             </div>
 
             {/* Coming soon */}
-            <div style={{ height: '1px', background: 'rgba(124,58,237,0.1)', margin: '2px 6px 6px' }} />
+            <div style={{ height: '1px', background: 'var(--border)', margin: '2px 6px 6px' }} />
             <div style={{ padding: '0 4px 4px' }}>
-              <p style={{ fontSize: '9px', fontWeight: '700', color: 'rgba(124,58,237,0.4)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '4px 8px 8px' }}>Coming Soon</p>
+              <p style={{ fontSize: '9px', fontWeight: '700', color: 'var(--text-dim)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '4px 8px 8px' }}>Coming Soon</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '3px' }}>
                 {MORE_SOON.map((item, i) => (
                   <div key={i} style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
                     padding: '9px 6px', borderRadius: '10px',
-                    background: 'rgba(255,255,255,0.02)',
-                    border: '1px solid rgba(255,255,255,0.04)', opacity: 0.4,
+                    background: 'var(--bg-input)',
+                    border: '1px solid var(--border)', opacity: 0.5,
                   }}>
-                    <item.icon size={13} color="rgba(255,255,255,0.4)" strokeWidth={1.6} />
-                    <span style={{ fontSize: '10px', fontWeight: '500', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{item.label}</span>
+                    <item.icon size={13} color="var(--text-muted)" strokeWidth={1.6} />
+                    <span style={{ fontSize: '10px', fontWeight: '500', color: 'var(--text-muted)', textAlign: 'center' }}>{item.label}</span>
                   </div>
                 ))}
               </div>

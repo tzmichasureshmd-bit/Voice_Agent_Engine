@@ -30,6 +30,10 @@ COLD_LEAD_SCORE = 0
 # Database — Supabase in prod, SQLite fallback for local dev
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/leads.db")
 
+# Branding
+COMPANY_NAME = os.getenv("COMPANY_NAME", "TZMICHA")
+AI_AGENT_NAME = os.getenv("AI_AGENT_NAME", "Misha")
+
 # Server
 HOST = "0.0.0.0"
 PORT = 8000

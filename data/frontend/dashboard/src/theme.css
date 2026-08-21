@@ -1,0 +1,672 @@
+/* ═══════════════════════════════════════════════════════════════
+   TZMICHA THEME SYSTEM — theme.css
+   All dark & light styles live HERE, never inline in components.
+   Components use className only. Zero inline color logic.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── PAGE ─────────────────────────────────────────────────────── */
+.t-page {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* ── CARDS ────────────────────────────────────────────────────── */
+.t-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.t-card:hover {
+  border-color: var(--accent-border);
+}
+
+.t-card-lg {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+}
+
+.t-card-sm {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+/* ── PANEL (sidebar / split-view panels) ─────────────────────── */
+.t-panel {
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+}
+.t-panel-right {
+  background: var(--bg-card);
+  border-left: 1px solid var(--border);
+}
+.t-panel-header {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.t-panel-center {
+  background: var(--bg-secondary);
+}
+
+/* ── TOP BAR ──────────────────────────────────────────────────── */
+.t-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+/* ── SECTION LABEL ────────────────────────────────────────────── */
+.t-section-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent-light);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 12px 8px;
+}
+.t-section-label-muted {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ── TEXT ─────────────────────────────────────────────────────── */
+.t-title {
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+.t-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.t-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 4px;
+}
+.t-text-primary   { color: var(--text-primary); }
+.t-text-secondary { color: var(--text-secondary); }
+.t-text-muted     { color: var(--text-muted); }
+.t-text-dim       { color: var(--text-dim); }
+.t-text-accent    { color: var(--accent-light); }
+.t-text-cyan      { color: var(--cyan); }
+
+/* ── DIVIDER ──────────────────────────────────────────────────── */
+.t-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 6px 0;
+}
+.t-divider-v {
+  width: 1px;
+  background: var(--border);
+}
+
+/* ── ICON BUTTON (close / toggle) ────────────────────────────── */
+.t-icon-btn {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.t-icon-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+/* ── FILTER BAR ───────────────────────────────────────────────── */
+.t-filter-bar {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 4px;
+  border: 1px solid var(--border);
+}
+.t-filter-btn {
+  padding: 7px 14px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-dim);
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.t-filter-btn:hover {
+  color: var(--text-muted);
+  background: var(--bg-card-hover);
+}
+.t-filter-btn.active-all {
+  background: var(--accent-bg);
+  color: var(--accent-light);
+  outline: 1px solid var(--accent-border);
+}
+.t-filter-btn.active-hot {
+  background: rgba(239,68,68,0.12);
+  color: #f87171;
+  outline: 1px solid rgba(239,68,68,0.3);
+}
+.t-filter-btn.active-warm {
+  background: rgba(245,158,11,0.12);
+  color: #fbbf24;
+  outline: 1px solid rgba(245,158,11,0.3);
+}
+.t-filter-btn.active-cold {
+  background: rgba(59,130,246,0.12);
+  color: #60a5fa;
+  outline: 1px solid rgba(59,130,246,0.3);
+}
+[data-theme="light"] .t-filter-btn.active-cold {
+  color: #2563eb;
+}
+
+/* ── EMPTY STATE ──────────────────────────────────────────────── */
+.t-empty {
+  text-align: center;
+  padding: 80px 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+}
+.t-empty-icon {
+  color: var(--border);
+  margin: 0 auto 14px;
+}
+.t-empty-title {
+  font-size: 14px;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+.t-empty-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* ── MODAL OVERLAY ────────────────────────────────────────────── */
+.t-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+[data-theme="light"] .t-modal-overlay {
+  background: rgba(13,17,23,0.4);
+}
+
+.t-modal {
+  background: var(--bg-card);
+  border: 1px solid var(--accent-border);
+  border-radius: 20px;
+  padding: 28px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--shadow-card);
+}
+
+/* ── SCORE BAR TRACK ──────────────────────────────────────────── */
+.t-score-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+/* ── PROGRESS BAR TRACK ───────────────────────────────────────── */
+.t-progress-track {
+  height: 4px;
+  background: var(--border);
+  border-radius: 999px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+/* ── TIMELINE LINE (CallLogs) ─────────────────────────────────── */
+.t-timeline-line {
+  position: absolute;
+  left: 9px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 2px;
+}
+[data-theme="dark"] .t-timeline-line {
+  background: linear-gradient(to bottom, rgba(124,58,237,0.4), rgba(124,58,237,0.05));
+}
+[data-theme="light"] .t-timeline-line {
+  background: linear-gradient(to bottom, rgba(37,99,235,0.4), rgba(37,99,235,0.05));
+}
+
+/* ── CALL LOG CARD ────────────────────────────────────────────── */
+.t-call-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+/* ── ACTIVE CALL CARD ─────────────────────────────────────────── */
+.t-active-call {
+  background: var(--bg-card);
+  border: 1px solid rgba(74,222,128,0.25);
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 10px;
+}
+[data-theme="light"] .t-active-call {
+  box-shadow: 0 0 20px rgba(5,150,105,0.08);
+}
+
+/* ── CALL DETAIL EXPAND ───────────────────────────────────────── */
+.t-call-detail-inner {
+  background: var(--bg-input);
+  border-radius: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+}
+
+/* ── INTELLIGENCE BOXES ───────────────────────────────────────── */
+.t-intel-box {
+  border-radius: 10px;
+  padding: 10px;
+}
+.t-intel-box-purple {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+}
+.t-intel-box-cyan {
+  background: var(--cyan-bg);
+  border: 1px solid var(--cyan-border);
+}
+.t-intel-box-green {
+  background: rgba(16,185,129,0.06);
+  border: 1px solid rgba(16,185,129,0.15);
+}
+.t-intel-box-yellow {
+  background: rgba(251,191,36,0.06);
+  border: 1px solid rgba(251,191,36,0.15);
+}
+
+/* ── CHAT BUBBLE ──────────────────────────────────────────────── */
+.t-bubble-ai {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  max-width: 80%;
+}
+.t-bubble-user {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  max-width: 80%;
+}
+
+/* ── CHAT AVATAR ──────────────────────────────────────────────── */
+.t-avatar-ai {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.t-avatar-user {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── AGENT CARD (AIEmployees list) ───────────────────────────── */
+.t-agent-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.t-agent-card:hover {
+  border-color: var(--accent-border);
+}
+
+.t-agent-badge-premium {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-light);
+}
+.t-agent-badge-normal {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* ── LANGUAGE TOGGLE BUTTON ───────────────────────────────────── */
+.t-lang-btn {
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.14s;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.t-lang-btn.active {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--accent-light);
+}
+
+/* ── SCRIPT MODE BUTTON ───────────────────────────────────────── */
+.t-script-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+.t-script-btn.active {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--accent-light);
+}
+
+/* ── WEBSITE INPUT WRAPPER ────────────────────────────────────── */
+.t-url-input-wrap {
+  display: flex;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 8px;
+}
+.t-url-prefix {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.t-url-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 11px;
+  padding: 7px 4px;
+  font-family: inherit;
+}
+
+/* ── PHONE INPUT WRAPPER ──────────────────────────────────────── */
+.t-phone-wrap {
+  display: flex;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 8px;
+}
+.t-phone-prefix {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.t-phone-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 12px;
+  padding: 7px 4px;
+  font-family: inherit;
+}
+
+/* ── CHECKLIST ITEM ───────────────────────────────────────────── */
+.t-check-label-done { font-size: 11px; color: var(--text-primary); font-weight: 500; }
+.t-check-label-todo { font-size: 11px; color: var(--text-dim);     font-weight: 400; }
+
+/* ── PROGRESS BANNER ──────────────────────────────────────────── */
+.t-progress-banner {
+  margin: 16px 24px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ── LEADS CARD ───────────────────────────────────────────────── */
+.t-lead-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.t-lead-email {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+.t-lead-phone {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+  font-family: monospace;
+}
+.t-lead-score-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.t-lead-score-value {
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+.t-lead-score-denom {
+  font-size: 9px;
+  color: var(--text-dim);
+}
+.t-lead-status {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 10px;
+  text-transform: capitalize;
+}
+
+/* ── CALL LOG TEXT ────────────────────────────────────────────── */
+.t-call-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.t-call-meta {
+  font-size: 11px;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.t-call-summary {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.t-call-score {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+  min-width: 32px;
+  text-align: right;
+}
+
+/* ── AGENT DETAIL TEXT ────────────────────────────────────────── */
+.t-agent-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.t-agent-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.t-agent-h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.t-agent-ready {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ── CHAT PANEL EMPTY ─────────────────────────────────────────── */
+.t-chat-empty {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--text-dim);
+}
+.t-chat-empty-icon {
+  color: var(--border);
+  margin-bottom: 8px;
+}
+.t-chat-footer-hint {
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-top: 6px;
+  text-align: center;
+}
+
+/* ── DARK MODE SPECIFIC ───────────────────────────────────────── */
+[data-theme="dark"] .t-card-lg,
+[data-theme="dark"] .t-card-sm,
+[data-theme="dark"] .t-card {
+  box-shadow: 0 0 0 1px rgba(124,58,237,0.06), 0 20px 60px rgba(0,0,0,0.4);
+}
+[data-theme="dark"] .t-agent-card {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+/* ── LIGHT MODE SPECIFIC ──────────────────────────────────────── */
+[data-theme="light"] .t-card-lg,
+[data-theme="light"] .t-card-sm,
+[data-theme="light"] .t-card {
+  box-shadow: 0 0 0 1px rgba(37,99,235,0.06), 0 8px 32px rgba(37,99,235,0.07);
+}
+[data-theme="light"] .t-agent-card {
+  box-shadow: 0 4px 16px rgba(37,99,235,0.07);
+}
+[data-theme="light"] .t-text-accent {
+  color: #2563eb;
+}
+[data-theme="light"] .t-section-label {
+  color: #2563eb;
+}
+[data-theme="light"] .t-agent-badge-premium {
+  color: #2563eb;
+}
+[data-theme="light"] .t-lang-btn.active,
+[data-theme="light"] .t-script-btn.active {
+  color: #2563eb;
+}
+[data-theme="light"] .t-bubble-user {
+  background: rgba(37,99,235,0.07);
+  border-color: rgba(37,99,235,0.15);
+}
+[data-theme="light"] .t-avatar-user {
+  background: rgba(37,99,235,0.07);
+  border-color: rgba(37,99,235,0.15);
+}
+[data-theme="light"] .t-progress-banner {
+  background: rgba(37,99,235,0.06);
+  border-color: rgba(37,99,235,0.15);
+}
+[data-theme="light"] .t-intel-box-purple {
+  background: rgba(37,99,235,0.06);
+  border-color: rgba(37,99,235,0.15);
+}
+[data-theme="light"] .t-filter-btn.active-all {
+  background: rgba(37,99,235,0.1);
+  color: #2563eb;
+  outline-color: rgba(37,99,235,0.3);
+}

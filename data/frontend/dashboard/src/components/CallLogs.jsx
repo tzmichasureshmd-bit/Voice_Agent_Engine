@@ -62,9 +62,12 @@ function ScoreRing({ score }) {
   const r = 16, circ = 2 * Math.PI * r
   const pct   = Math.min(Math.max((score || 0) / 10, 0), 1)
   const color = pct >= 0.7 ? '#f87171' : pct >= 0.4 ? '#fbbf24' : '#60a5fa'
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light'
+  const trackColor = isDark ? '#1e1e30' : '#dde5f5'
+  const textColor  = isDark ? '#f0f0f8' : '#0d1117'
   return (
     <svg width="44" height="44" style={{ flexShrink: 0 }}>
-      <circle cx="22" cy="22" r={r} fill="none" stroke="#1e1e30" strokeWidth="3" />
+      <circle cx="22" cy="22" r={r} fill="none" stroke={trackColor} strokeWidth="3" />
       <motion.circle cx="22" cy="22" r={r} fill="none" stroke={color} strokeWidth="3"
         strokeLinecap="round" strokeDasharray={circ}
         initial={{ strokeDashoffset: circ }}
@@ -73,7 +76,7 @@ function ScoreRing({ score }) {
         transform="rotate(-90 22 22)"
         style={{ filter: `drop-shadow(0 0 4px ${color})` }}
       />
-      <text x="22" y="27" textAnchor="middle" fill="#f0f0f8" fontSize="11" fontWeight="800">{score}</text>
+      <text x="22" y="27" textAnchor="middle" fill={textColor} fontSize="11" fontWeight="800">{score}</text>
     </svg>
   )
 }
@@ -463,8 +466,8 @@ export default function CallLogs() {
                 <div style={{ position: 'absolute', left: '-24px', top: '20px', width: '10px', height: '10px', borderRadius: '50%', background: c, boxShadow: `0 0 10px rgba(${g},0.6)`, border: '2px solid #05050a' }} />
                 <div onClick={() => setExpanded(isOpen ? null : call.id)}
                   style={{ background: '#0e0e1a', border: `1px solid rgba(${g},0.15)`, borderRadius: '14px', padding: '16px 20px', cursor: 'pointer', transition: 'all 0.2s' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = `rgba(${g},0.35)`; e.currentTarget.style.background = '#13131f' }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = `rgba(${g},0.15)`; e.currentTarget.style.background = '#0e0e1a' }}>
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = `rgba(${g},0.35)`; e.currentTarget.style.background = 'var(--bg-card-hover)' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = `rgba(${g},0.15)`; e.currentTarget.style.background = 'var(--bg-card)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: 0 }}>
                       <div style={{ width: '42px', height: '42px', borderRadius: '12px', flexShrink: 0, background: `rgba(${g},0.12)`, border: `1px solid rgba(${g},0.2)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', fontWeight: '800', color: c }}>

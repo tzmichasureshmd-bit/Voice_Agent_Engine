@@ -54,19 +54,19 @@ export default function Dashboard() {
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '32px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <div>
-            <h1 style={{ fontSize: '28px', fontWeight: '900', letterSpacing: '-0.8px', lineHeight: 1.1, color: '#f0f0f8' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: '900', letterSpacing: '-0.8px', lineHeight: 1.1, color: 'var(--text-primary)' }}>
               Good {getGreeting()}, {getFirstName()}
             </h1>
-            <p style={{ fontSize: '13px', color: '#55556a', marginTop: '6px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '6px' }}>
               {new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })} · Here's how your voice operations are performing.
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '4px', background: '#0e0e1a', border: '1px solid #1e1e30', borderRadius: '10px', padding: '4px' }}>
+          <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '4px' }}>
             {[7,14,30].map(d => (
               <button key={d} onClick={() => setTimePeriod(d)} style={{
                 padding: '5px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: '700',
-                background: timePeriod === d ? '#7c3aed' : 'transparent',
-                color: timePeriod === d ? '#fff' : '#55556a',
+                background: timePeriod === d ? 'var(--accent)' : 'transparent',
+                color: timePeriod === d ? '#fff' : 'var(--text-muted)',
                 transition: 'all 0.15s',
               }}>{d}d</button>
             ))}
@@ -80,7 +80,7 @@ export default function Dashboard() {
           <motion.div key={m.label}
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
             style={{
-              background: '#0e0e1a', border: `1px solid rgba(${m.glow},0.15)`,
+              background: 'var(--bg-card)', border: `1px solid rgba(${m.glow},0.18)`,
               borderRadius: '16px', padding: '20px',
               boxShadow: `0 0 0 1px rgba(${m.glow},0.06)`,
             }}
@@ -94,12 +94,12 @@ export default function Dashboard() {
                 }}>
                   <m.icon size={16} color={m.color} />
                 </div>
-                <span style={{ fontSize: '11px', fontWeight: '700', color: '#55556a', textTransform: 'uppercase', letterSpacing: '0.8px' }}>{m.label}</span>
+                <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>{m.label}</span>
               </div>
-              <span style={{ fontSize: '18px', color: '#1e1e30' }}>—</span>
+              <span style={{ fontSize: '18px', color: 'var(--border)' }}>—</span>
             </div>
-            <p style={{ fontSize: '30px', fontWeight: '900', color: '#f0f0f8', letterSpacing: '-1px', lineHeight: 1 }}>{m.value}</p>
-            <p style={{ fontSize: '11px', color: '#33334a', marginTop: '6px' }}>{m.sub}</p>
+            <p style={{ fontSize: '30px', fontWeight: '900', color: 'var(--text-primary)', letterSpacing: '-1px', lineHeight: 1 }}>{m.value}</p>
+            <p style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '6px' }}>{m.sub}</p>
           </motion.div>
         ))}
       </div>
@@ -108,16 +108,16 @@ export default function Dashboard() {
       <motion.div
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32 }}
         style={{
-          background: '#0e0e1a',
-          border: '1px solid rgba(124,58,237,0.2)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--accent-border)',
           borderRadius: '14px', padding: '14px 22px', marginBottom: '16px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px',
-          boxShadow: '0 0 0 1px rgba(124,58,237,0.06), 0 0 40px rgba(124,58,237,0.04)',
+          boxShadow: 'var(--shadow-card)',
         }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Zap size={14} color="#a78bfa" />
           <span style={{ fontSize: '11px', fontWeight: '800', color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '1.5px' }}>TZMICHA ENGINE</span>
-          <span style={{ fontSize: '10px', color: '#33334a', fontWeight: '500' }}>100% Own · Zero Cost · Zero API</span>
+          <span style={{ fontSize: '10px', color: 'var(--text-dim)', fontWeight: '500' }}>100% Own · Zero Cost · Zero API</span>
         </div>
         <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
           {[
@@ -128,8 +128,8 @@ export default function Dashboard() {
             <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: 7, height: 7, borderRadius: '50%', background: s.color, boxShadow: `0 0 8px ${s.color}` }} />
               <div>
-                <p style={{ fontSize: '11px', fontWeight: '700', color: '#f0f0f8' }}>{s.label}</p>
-                <p style={{ fontSize: '9px', color: '#33334a' }}>{s.sub}</p>
+                <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-primary)' }}>{s.label}</p>
+                <p style={{ fontSize: '9px', color: 'var(--text-dim)' }}>{s.sub}</p>
               </div>
             </div>
           ))}
@@ -140,15 +140,15 @@ export default function Dashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '12px', marginBottom: '16px' }}>
         {/* Performance chart */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.36 }}
-          style={{ background: '#0e0e1a', border: '1px solid #1e1e30', borderRadius: '18px', padding: '24px', boxShadow: '0 0 0 1px rgba(124,58,237,0.04)' }}>
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', padding: '24px', boxShadow: 'var(--shadow-card)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px' }}>
             <div>
-              <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#f0f0f8' }}>Conversation Performance</h3>
-              <p style={{ fontSize: '11px', color: '#33334a', marginTop: '3px' }}>Weekly calls vs qualified leads</p>
+              <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Conversation Performance</h3>
+              <p style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '3px' }}>Weekly calls vs qualified leads</p>
             </div>
             <div style={{ display: 'flex', gap: '16px' }}>
               {[{ color: '#06b6d4', label: 'Calls' }, { color: '#10b981', label: 'Qualified' }].map(l => (
-                <span key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#55556a' }}>
+                <span key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--text-muted)' }}>
                   <span style={{ width: 7, height: 7, borderRadius: '50%', background: l.color, display: 'inline-block' }} />{l.label}
                 </span>
               ))}
@@ -161,9 +161,9 @@ export default function Dashboard() {
                   <linearGradient id="gC" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#06b6d4" stopOpacity={0.25} /><stop offset="100%" stopColor="#06b6d4" stopOpacity={0} /></linearGradient>
                   <linearGradient id="gQ" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#10b981" stopOpacity={0.2}  /><stop offset="100%" stopColor="#10b981" stopOpacity={0} /></linearGradient>
                 </defs>
-                <XAxis dataKey="day" stroke="#1e1e30" tick={{ fill: '#33334a', fontSize: 11 }} tickLine={false} axisLine={false} />
-                <YAxis stroke="#1e1e30" tick={{ fill: '#33334a', fontSize: 11 }} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: '#0e0e1a', border: '1px solid #1e1e30', borderRadius: '10px', fontSize: '12px', color: '#f0f0f8' }} />
+                <XAxis dataKey="day" stroke="var(--border)" tick={{ fill: 'var(--text-dim)', fontSize: 11 }} tickLine={false} axisLine={false} />
+                <YAxis stroke="var(--border)" tick={{ fill: 'var(--text-dim)', fontSize: 11 }} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '12px', color: 'var(--text-primary)' }} />
                 <Area type="monotone" dataKey="calls"     stroke="#06b6d4" strokeWidth={2} fill="url(#gC)" />
                 <Area type="monotone" dataKey="qualified" stroke="#10b981" strokeWidth={2} fill="url(#gQ)" />
               </AreaChart>
@@ -173,16 +173,16 @@ export default function Dashboard() {
 
         {/* Lead Pipeline */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-          style={{ background: '#0e0e1a', border: '1px solid #1e1e30', borderRadius: '18px', padding: '24px', boxShadow: '0 0 0 1px rgba(124,58,237,0.04)' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#f0f0f8', marginBottom: '4px' }}>Lead Pipeline</h3>
-          <p style={{ fontSize: '11px', color: '#33334a', marginBottom: '20px' }}>Qualification breakdown</p>
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', padding: '24px', boxShadow: 'var(--shadow-card)' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '4px' }}>Lead Pipeline</h3>
+          <p style={{ fontSize: '11px', color: 'var(--text-dim)', marginBottom: '20px' }}>Qualification breakdown</p>
           {stats.total_leads === 0 ? <EmptyChart message="Add leads to see pipeline" /> : (
             <>
               <ResponsiveContainer width="100%" height={130}>
                 <BarChart data={categoryData} barSize={32}>
-                  <XAxis dataKey="name" stroke="#1e1e30" tick={{ fill: '#33334a', fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#1e1e30" tick={{ fill: '#33334a', fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background: '#0e0e1a', border: '1px solid #1e1e30', borderRadius: '10px', fontSize: '12px', color: '#f0f0f8' }} />
+                  <XAxis dataKey="name" stroke="var(--border)" tick={{ fill: 'var(--text-dim)', fontSize: 11 }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="var(--border)" tick={{ fill: 'var(--text-dim)', fontSize: 11 }} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '12px', color: 'var(--text-primary)' }} />
                   <Bar dataKey="value" radius={[6,6,0,0]}>
                     {categoryData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                   </Bar>
@@ -201,8 +201,8 @@ export default function Dashboard() {
                     textAlign: 'center',
                   }}>
                     <s.icon size={13} color={s.color} style={{ margin: '0 auto 4px' }} />
-                    <p style={{ fontSize: '18px', fontWeight: '800', color: '#f0f0f8' }}>{s.value}</p>
-                    <p style={{ fontSize: '10px', color: '#33334a' }}>{s.label}</p>
+                    <p style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>{s.value}</p>
+                    <p style={{ fontSize: '10px', color: 'var(--text-dim)' }}>{s.label}</p>
                   </div>
                 ))}
               </div>
@@ -213,20 +213,20 @@ export default function Dashboard() {
 
       {/* ── Recent Activity ── */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.44 }}
-        style={{ background: '#0e0e1a', border: '1px solid #1e1e30', borderRadius: '18px', padding: '24px', boxShadow: '0 0 0 1px rgba(124,58,237,0.04)' }}>
+        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', padding: '24px', boxShadow: 'var(--shadow-card)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
           <div>
-            <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#f0f0f8' }}>Recent Activity</h3>
-            <p style={{ fontSize: '11px', color: '#33334a', marginTop: '3px' }}>Latest AI conversations</p>
+            <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Recent Activity</h3>
+            <p style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '3px' }}>Latest AI conversations</p>
           </div>
-          <Activity size={14} color="#1e1e30" />
+          <Activity size={14} color="var(--border)" />
         </div>
 
         {recentCalls.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 0' }}>
-            <Phone size={24} style={{ color: '#1e1e30', margin: '0 auto 10px' }} />
-            <p style={{ fontSize: '13px', color: '#33334a' }}>No activity yet</p>
-            <p style={{ fontSize: '11px', color: '#1e1e30', marginTop: '4px' }}>Use the Simulator to make your first AI call</p>
+            <Phone size={24} style={{ color: 'var(--border)', margin: '0 auto 10px' }} />
+            <p style={{ fontSize: '13px', color: 'var(--text-dim)' }}>No activity yet</p>
+            <p style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '4px' }}>Use the Simulator to make your first AI call</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -245,18 +245,18 @@ export default function Dashboard() {
                     fontSize: '13px', fontWeight: '800', color: '#a78bfa',
                   }}>{call.lead_name?.[0] || '?'}</div>
                   <div>
-                    <p style={{ fontSize: '13px', fontWeight: '600', color: '#f0f0f8' }}>{call.lead_name}</p>
-                    <p style={{ fontSize: '11px', color: '#33334a' }}>
+                    <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{call.lead_name}</p>
+                    <p style={{ fontSize: '11px', color: 'var(--text-dim)' }}>
                       {call.summary ? call.summary.slice(0, 52) + (call.summary.length > 52 ? '…' : '') : `${call.sentiment} · ${call.duration_seconds}s`}
                     </p>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '11px', color: '#33334a', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <Clock size={10} />{call.duration_seconds}s
                   </span>
                   <CategoryBadge cat={call.category} />
-                  <span style={{ fontSize: '13px', fontWeight: '800', color: '#f0f0f8', minWidth: '32px', textAlign: 'right' }}>{call.lead_score}/10</span>
+                  <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-primary)', minWidth: '32px', textAlign: 'right' }}>{call.lead_score}/10</span>
                 </div>
               </motion.div>
             ))}
@@ -279,8 +279,8 @@ function CategoryBadge({ cat }) {
 
 function EmptyChart({ message }) {
   return (
-    <div style={{ height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed #1e1e30', borderRadius: '12px' }}>
-      <p style={{ fontSize: '12px', color: '#33334a', textAlign: 'center' }}>{message}</p>
+    <div style={{ height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--border)', borderRadius: '12px' }}>
+      <p style={{ fontSize: '12px', color: 'var(--text-dim)', textAlign: 'center' }}>{message}</p>
     </div>
   )
 }

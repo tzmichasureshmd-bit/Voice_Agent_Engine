@@ -10,7 +10,7 @@ export default function Profile({ clientData, setClientData }) {
     contact_name: clientData?.contact_name || '',
     email: clientData?.email || '',
     product_info: clientData?.product_info || '',
-    ai_name: clientData?.ai_name || 'Alex',
+    ai_name: clientData?.ai_name || 'Misha',
     ai_tone: clientData?.ai_tone || 'friendly',
   })
   const [saved, setSaved] = useState(false)
@@ -71,7 +71,7 @@ export default function Profile({ clientData, setClientData }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div>
               <label style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px', display: 'block' }}>AI Caller Name</label>
-              <input type="text" value={form.ai_name} onChange={e => setForm({...form, ai_name: e.target.value})} className="input" placeholder="e.g. Alex, Sarah" />
+              <input type="text" value={form.ai_name} onChange={e => setForm({...form, ai_name: e.target.value})} className="input" placeholder="e.g. Misha, Sarah" />
             </div>
             <div>
               <label style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px', display: 'block' }}>AI Tone</label>

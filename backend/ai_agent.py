@@ -1,5 +1,5 @@
 from groq import Groq
-from config import GROQ_API_KEY, AI_TEMPERATURE
+from config import GROQ_API_KEY, AI_TEMPERATURE, COMPANY_NAME, AI_AGENT_NAME
 import json
 
 # Singleton — reuse connection, no cold start
@@ -126,6 +126,7 @@ Summary language rule: {lang_note}"""
         }
 
 
-def generate_opening(lead_name: str, product_info: str, ai_name: str = "Alex", company_name: str = "") -> str:
-    company_part = f"from {company_name}" if company_name else ""
-    return f"Hi {lead_name}! Myself {ai_name} {company_part} — is this a right time to talk for 2 minutes?"
+def generate_opening(lead_name: str, product_info: str, ai_name: str = None, company_name: str = None) -> str:
+    ai_name = ai_name or AI_AGENT_NAME
+    company_name = company_name or COMPANY_NAME
+    return f"Hi {lead_name}! Myself {ai_name} from {company_name} - is this a right time to talk for 2 minutes?"

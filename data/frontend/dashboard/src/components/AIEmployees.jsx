@@ -238,7 +238,7 @@ export default function AIEmployees() {
 
       // Start session with employee context
       const r = await api.post('/agent/session/start', {
-        agent_name:   detailForm.name || 'Alex',
+        agent_name:   detailForm.name || 'Misha',
         product_info: detailForm.company_name || '',
         script:       detailForm.script || '',
         goals:        detailForm.goal || '',
@@ -459,7 +459,7 @@ export default function AIEmployees() {
                   overflow: 'hidden', cursor: 'pointer', transition: 'border-color 0.2s',
                 }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(124,58,237,0.25)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = '#1e1e30'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
                 onClick={() => openDetail(emp)}
               >
                 <div style={{ padding: '18px' }}>

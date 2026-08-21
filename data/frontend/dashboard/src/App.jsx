@@ -65,6 +65,7 @@ function App() {
       if (!result) return
       try {
         const res = await axios.post(`${API}/auth/google`, { id_token: result.idToken })
+        localStorage.setItem('user_role', 'client_admin')
         handleLogin(res.data)
       } catch (e) { console.error('Google redirect login failed', e) }
     }).catch(() => {})

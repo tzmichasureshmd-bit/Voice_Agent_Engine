@@ -3,7 +3,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRe
 
 const firebaseConfig = {
   apiKey: "AIzaSyCNFk_bIRzE7YYMmzUfnH6js6usrMRLE-4",
-  authDomain: "voice.tzmicha.com",
+  authDomain: "tzmicha-ai-voice.firebaseapp.com",
   projectId: "tzmicha-ai-voice",
   storageBucket: "tzmicha-ai-voice.firebasestorage.app",
   messagingSenderId: "458569849865",

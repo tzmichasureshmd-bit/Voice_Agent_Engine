@@ -1,0 +1,310 @@
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT MODE — TZMICHA Design System
+   White background + #40e0d0 Turquoise accent
+   Dark mode is untouched — all overrides live here only
+   ═══════════════════════════════════════════════════════════════ */
+
+[data-theme="light"] {
+  /* Backgrounds */
+  --bg-primary:    #f7fffe;
+  --bg-secondary:  #ffffff;
+  --bg-card:       #ffffff;
+  --bg-card-hover: #f0fffe;
+  --bg-sidebar:    #ffffff;
+  --bg-input:      #f0fffe;
+
+  /* Borders */
+  --border:        #c8f0ec;
+  --border-hover:  #80d8d0;
+
+  /* Text */
+  --text-primary:   #0a1a18;
+  --text-secondary: #2a5a54;
+  --text-muted:     #5a8a84;
+  --text-dim:       #9acac4;
+
+  /* Accent — Turquoise */
+  --accent:         #40e0d0;
+  --accent-light:   #20c8b8;
+  --accent-bg:      rgba(64,224,208,0.1);
+  --accent-border:  rgba(64,224,208,0.35);
+  --accent-glow:    rgba(64,224,208,0.25);
+
+  --cyan:           #40e0d0;
+  --cyan-light:     #20c8b8;
+  --cyan-bg:        rgba(64,224,208,0.08);
+  --cyan-border:    rgba(64,224,208,0.3);
+
+  --success:        #059669;
+  --warning:        #d97706;
+  --danger:         #dc2626;
+
+  --shadow:         0 4px 24px rgba(64,224,208,0.12);
+  --shadow-card:    0 0 0 1px rgba(64,224,208,0.12), 0 8px 32px rgba(64,224,208,0.08);
+  --shadow-glow:    0 0 30px rgba(64,224,208,0.2);
+}
+
+/* ── Body ── */
+[data-theme="light"] body {
+  background: #f7fffe;
+  color: #0a1a18;
+}
+
+/* Fix: root page background (#05050a used as body bg in dark) */
+[data-theme="light"] .appshell-root {
+  background: #f7fffe !important;
+}
+
+/* Lock dark mode root — never override */
+[data-theme="dark"] .appshell-root {
+  background: #05050a !important;
+}
+[data-theme="dark"] .appshell-nav-wrapper {
+  background: transparent !important;
+}
+
+/* ── Nav pill ── */
+[data-theme="light"] .appshell-pill-nav {
+  background: #ffffff !important;
+  border-bottom: 1px solid rgba(64,224,208,0.25) !important;
+  box-shadow: 0 8px 40px rgba(64,224,208,0.15), 0 0 0 1px rgba(64,224,208,0.1) !important;
+}
+/* Lock dark mode pill — white pill, dark visible icons, purple active */
+[data-theme="dark"] .appshell-pill-nav {
+  background: #ffffff !important;
+  border-bottom: 1px solid rgba(0,0,0,0.08) !important;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.25) !important;
+}
+[data-theme="dark"] .appshell-nav-btn {
+  color: #3a3a5c !important;
+  background: transparent !important;
+}
+[data-theme="dark"] .appshell-nav-btn:hover {
+  color: #1a1a2e !important;
+  background: rgba(124,58,237,0.08) !important;
+}
+[data-theme="dark"] .appshell-nav-btn.active {
+  color: #7c3aed !important;
+  background: rgba(124,58,237,0.1) !important;
+}
+[data-theme="dark"] .appshell-active-ring {
+  border-color: rgba(124,58,237,0.5) !important;
+}
+[data-theme="dark"] .appshell-icon-btn {
+  color: #3a3a5c !important;
+}
+[data-theme="dark"] .appshell-icon-btn:hover {
+  color: #1a1a2e !important;
+}
+[data-theme="dark"] .appshell-divider {
+  background: rgba(124,58,237,0.15) !important;
+}
+[data-theme="light"] .appshell-pill-nav span[style*="WebkitTextFillColor"],
+[data-theme="light"] .appshell-pill-nav span[style*="background: linear-gradient"] {
+  background: linear-gradient(135deg, #40e0d0, #20c8b8) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+[data-theme="light"] .appshell-nav-btn {
+  color: #40e0d0 !important;
+  background: transparent !important;
+}
+[data-theme="light"] .appshell-nav-btn:hover {
+  color: #20c8b8 !important;
+  background: transparent !important;
+}
+[data-theme="light"] .appshell-nav-btn.active {
+  color: #40e0d0 !important;
+  background: transparent !important;
+}
+[data-theme="light"] .appshell-active-ring {
+  border-color: #40e0d0 !important;
+}
+[data-theme="light"] .appshell-icon-btn {
+  color: #40e0d0 !important;
+}
+[data-theme="light"] .appshell-icon-btn:hover {
+  color: #20c8b8 !important;
+}
+[data-theme="light"] .appshell-divider {
+  background: rgba(64,224,208,0.4) !important;
+}
+
+/* ── Buttons ── */
+[data-theme="light"] .btn-primary {
+  background: linear-gradient(135deg, #40e0d0, #20c8b8) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(64,224,208,0.35) !important;
+}
+[data-theme="light"] .btn-primary:hover {
+  box-shadow: 0 6px 24px rgba(64,224,208,0.5) !important;
+}
+
+/* ── Input focus ── */
+[data-theme="light"] .input:focus {
+  border-color: #40e0d0 !important;
+  box-shadow: 0 0 0 3px rgba(64,224,208,0.15) !important;
+}
+
+/* ── Badges ── */
+[data-theme="light"] .badge-hot  { color: #dc2626; background: rgba(220,38,38,0.08);  border-color: rgba(220,38,38,0.2);  }
+[data-theme="light"] .badge-warm { color: #d97706; background: rgba(217,119,6,0.08);  border-color: rgba(217,119,6,0.2);  }
+[data-theme="light"] .badge-cold { color: #20c8b8; background: rgba(64,224,208,0.1);  border-color: rgba(64,224,208,0.25); }
+
+/* ══════════════════════════════════════════════════════════════
+   GLOBAL INLINE-STYLE OVERRIDES
+   These catch all hardcoded dark hex values in component files
+   ══════════════════════════════════════════════════════════════ */
+
+/* Dark backgrounds → white */
+[data-theme="light"] [style*="background: #0e0e1a"],
+[data-theme="light"] [style*="background:#0e0e1a"] { background: #ffffff !important; }
+
+[data-theme="light"] [style*="background: #05050a"],
+[data-theme="light"] [style*="background:#05050a"] { background: #f7fffe !important; }
+
+[data-theme="light"] [style*="background: #0d0d1a"],
+[data-theme="light"] [style*="background:#0d0d1a"] { background: #f7fffe !important; }
+
+[data-theme="light"] [style*="background: #0a0a14"],
+[data-theme="light"] [style*="background:#0a0a14"] { background: #edfcfa !important; }
+
+[data-theme="light"] [style*="background: #13131f"],
+[data-theme="light"] [style*="background:#13131f"] { background: #f0fffe !important; }
+
+[data-theme="light"] [style*="background: #181828"],
+[data-theme="light"] [style*="background:#181828"] { background: #f0fffe !important; }
+
+[data-theme="light"] [style*="background: #1e1e30"],
+[data-theme="light"] [style*="background:#1e1e30"] { background: #c8f0ec !important; }
+
+/* Dark borders → turquoise-tinted */
+[data-theme="light"] [style*="border: 1px solid #1e1e30"],
+[data-theme="light"] [style*="border:1px solid #1e1e30"] { border-color: #c8f0ec !important; }
+
+[data-theme="light"] [style*="border-right: 1px solid #1e1e30"],
+[data-theme="light"] [style*="border-left: 1px solid #1e1e30"],
+[data-theme="light"] [style*="border-bottom: 1px solid #1e1e30"],
+[data-theme="light"] [style*="border-top: 1px solid #1e1e30"] { border-color: #c8f0ec !important; }
+
+[data-theme="light"] [style*="border: 1px solid #2b3447"],
+[data-theme="light"] [style*="border:1px solid #2b3447"] { border-color: #c8f0ec !important; }
+
+/* border-bottom shorthand used in tables and toggles */
+[data-theme="light"] [style*="borderBottom: '1px solid #1e1e30'"],
+[data-theme="light"] [style*="borderBottom: '1px solid #0e0e1a'"],
+[data-theme="light"] [style*="borderBottom: '1px solid #0a0a14'"] { border-bottom-color: #c8f0ec !important; }
+
+/* Table row separators */
+[data-theme="light"] [style*="border-bottom: 1px solid #0a0a14"],
+[data-theme="light"] [style*="border-bottom: 1px solid #1e1e30"] { border-bottom-color: #c8f0ec !important; }
+
+/* Dark text → readable dark teal */
+[data-theme="light"] [style*="color: #f0f0f8"],
+[data-theme="light"] [style*="color:#f0f0f8"] { color: #0a1a18 !important; }
+
+[data-theme="light"] [style*="color: #9999b3"],
+[data-theme="light"] [style*="color:#9999b3"] { color: #2a5a54 !important; }
+
+[data-theme="light"] [style*="color: #55556a"],
+[data-theme="light"] [style*="color:#55556a"] { color: #5a8a84 !important; }
+
+[data-theme="light"] [style*="color: #33334a"],
+[data-theme="light"] [style*="color:#33334a"] { color: #9acac4 !important; }
+
+[data-theme="light"] [style*="color: #1e1e30"],
+[data-theme="light"] [style*="color:#1e1e30"] { color: #c8f0ec !important; }
+
+[data-theme="light"] [style*="color: #a0a0b8"],
+[data-theme="light"] [style*="color:#a0a0b8"] { color: #2a5a54 !important; }
+
+[data-theme="light"] [style*="color: #8888aa"],
+[data-theme="light"] [style*="color:#8888aa"] { color: #2a5a54 !important; }
+
+/* Purple accent → turquoise in light mode */
+[data-theme="light"] [style*="color: #a78bfa"],
+[data-theme="light"] [style*="color:#a78bfa"] { color: #20c8b8 !important; }
+
+/* Score bar track */
+[data-theme="light"] [style*="background: #1e1e30"] { background: #c8f0ec !important; }
+
+/* Transparent dark overlays → light */
+[data-theme="light"] [style*="background: rgba(255,255,255,0.04)"],
+[data-theme="light"] [style*="background:rgba(255,255,255,0.04)"] { background: #f0fffe !important; border-color: #c8f0ec !important; }
+
+[data-theme="light"] [style*="background: rgba(255,255,255,0.05)"],
+[data-theme="light"] [style*="background:rgba(255,255,255,0.05)"] { background: #f0fffe !important; }
+
+[data-theme="light"] [style*="background: rgba(255,255,255,0.06)"],
+[data-theme="light"] [style*="background:rgba(255,255,255,0.06)"] { background: #edfcfa !important; }
+
+/* Timeline line in CallLogs */
+[data-theme="light"] [style*="linear-gradient(to bottom, rgba(124,58,237"] {
+  background: linear-gradient(to bottom, rgba(64,224,208,0.5), rgba(64,224,208,0.05)) !important;
+}
+
+/* SVG score ring */
+[data-theme="light"] circle[stroke="#1e1e30"] { stroke: #c8f0ec !important; }
+[data-theme="light"] text[fill="#f0f0f8"]     { fill: #0a1a18 !important; }
+
+/* Inline input text color fix */
+[data-theme="light"] [style*="background: none"][style*="color: #f0f0f8"],
+[data-theme="light"] [style*="background:none"][style*="color: #f0f0f8"] { color: #0a1a18 !important; }
+
+/* More menu dropdown */
+[data-theme="light"] [style*="background: #0e0e1a"][style*="border-radius: 20px"] {
+  background: #ffffff !important;
+  border-color: rgba(64,224,208,0.3) !important;
+  box-shadow: 0 24px 60px rgba(64,224,208,0.15), 0 0 0 1px rgba(64,224,208,0.1) !important;
+}
+
+/* Tooltip */
+[data-theme="light"] [style*="background: #0a0a14"][style*="border-radius: 8px"] {
+  background: #ffffff !important;
+  border-color: rgba(64,224,208,0.3) !important;
+  color: #0a1a18 !important;
+}
+
+/* VoiceLab title gradient in light */
+[data-theme="light"] .vl-title {
+  background: linear-gradient(135deg, #40e0d0, #20c8b8, #0891b2) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* VoiceLab send/enhance buttons */
+[data-theme="light"] .vl-send-tts-btn {
+  border-color: rgba(64,224,208,0.35) !important;
+  background: rgba(64,224,208,0.08) !important;
+  color: #20c8b8 !important;
+}
+[data-theme="light"] .vl-enhance-btn.grammar {
+  background: rgba(64,224,208,0.08) !important;
+  border-color: rgba(64,224,208,0.25) !important;
+  color: #20c8b8 !important;
+}
+
+/* CallSimulator & AIEmployees full-height layout wrappers */
+[data-theme="light"] [style*="height: calc(100vh - 100px)"] {
+  background: #f7fffe !important;
+}
+
+/* Billing quick-amount buttons dark bg */
+[data-theme="light"] [style*="background: #1e1e30"][style*="border-radius: 8px"] {
+  background: #edfcfa !important;
+  color: #0a1a18 !important;
+}
+
+/* Settings select elements */
+[data-theme="light"] select[style*="background: #0a0a14"] {
+  background: #f0fffe !important;
+  color: #0a1a18 !important;
+  border-color: #c8f0ec !important;
+}
+
+/* Settings/Billing inline input elements */
+[data-theme="light"] input[style*="background: #0a0a14"] {
+  background: #f0fffe !important;
+  color: #0a1a18 !important;
+  border-color: #c8f0ec !important;
+}

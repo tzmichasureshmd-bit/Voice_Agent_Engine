@@ -584,7 +584,7 @@ export default function VoiceLab() {
     let greeting = "Hi! How are you doing today?"
     try {
       const res = await api.post('/agent/session/start', {
-        agent_name:   agentEmployee?.name        || 'Alex',
+        agent_name:   agentEmployee?.name        || 'Misha',
         product_info: agentEmployee?.company_info || '',
         script:       agentEmployee?.script       || '',
         goals:        agentEmployee?.goals        || '',

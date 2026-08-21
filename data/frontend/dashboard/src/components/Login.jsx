@@ -36,7 +36,7 @@ export default function Login({ onLogin, onAdmin }) {
   const [adminError,     setAdminError]     = useState('')
   const [reg, setReg] = useState({
     company_name: '', industry: '', contact_name: '',
-    email: '', phone: '', password: '', product_info: '', ai_name: 'Alex'
+    email: '', phone: '', password: '', product_info: '', ai_name: 'Misha'
   })
 
   const handleAdminSubmit = () => {
@@ -74,8 +74,9 @@ export default function Login({ onLogin, onAdmin }) {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true); setError('')
     try {
-      const { idToken } = await signInWithGoogle()
-      const res = await axios.post(`${API}/auth/google`, { id_token: idToken })
+      const result = await signInWithGoogle()
+      if (!result) return // redirect flow — page will reload, App.jsx handles it
+      const res = await axios.post(`${API}/auth/google`, { id_token: result.idToken })
       localStorage.setItem('client_id',   res.data.client_id)
       localStorage.setItem('client_data', JSON.stringify(res.data))
       localStorage.setItem('user_role',   'client_admin')
@@ -317,7 +318,7 @@ export default function Login({ onLogin, onAdmin }) {
                 </button>
               </div>
               <textarea placeholder="What does your company offer? *" value={reg.product_info} onChange={e => setReg({...reg, product_info: e.target.value})} className="input" style={{ height: '70px', resize: 'none' }} />
-              <input type="text" placeholder="AI Caller Name (default: Alex)" value={reg.ai_name} onChange={e => setReg({...reg, ai_name: e.target.value})} className="input" />
+              <input type="text" placeholder="AI Caller Name (default: Misha)" value={reg.ai_name} onChange={e => setReg({...reg, ai_name: e.target.value})} className="input" />
 
               <AnimatePresence>
                 {error && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}

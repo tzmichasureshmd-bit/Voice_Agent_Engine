@@ -31,17 +31,21 @@ COLD_LEAD_SCORE = 0
 _raw_db_url = os.getenv("DATABASE_URL", "sqlite:///./data/leads.db")
 if _raw_db_url.startswith("postgres://"):
     _raw_db_url = _raw_db_url.replace("postgres://", "postgresql://", 1)
-# If password contains literal '%40' (URL-encoded @), decode it first then re-encode properly
 if _raw_db_url.startswith("postgresql://"):
-    from urllib.parse import urlparse, quote_plus, unquote
-    # unquote handles %40 → @ so urlparse can split correctly
-    parsed = urlparse(unquote(_raw_db_url))
-    # Re-encode password so SQLAlchemy gets a clean URL
-    _raw_db_url = (
-        f"postgresql://{parsed.username}:{quote_plus(parsed.password or '')}"
-        f"@{parsed.hostname}:{parsed.port or 5432}{parsed.path}"
-        f"?sslmode=require"
-    )
+    import re
+    from urllib.parse import quote_plus
+    # Parse manually to handle passwords with special chars like @ (%40)
+    m = re.match(r"postgresql://([^:]+):(.+)@([^:@/]+):?(\d+)?(/\S*)?$", _raw_db_url)
+    if m:
+        user, raw_pass, host, port, path = m.groups()
+        # Decode %40 etc, then re-encode cleanly
+        from urllib.parse import unquote
+        decoded_pass = unquote(raw_pass)
+        _raw_db_url = (
+            f"postgresql://{user}:{quote_plus(decoded_pass)}"
+            f"@{host}:{port or 5432}{path or '/postgres'}"
+            f"?sslmode=require"
+        )
 DATABASE_URL = _raw_db_url
 
 # Branding

@@ -145,8 +145,11 @@ try:
         _sa_path = os.path.join(os.path.dirname(__file__), "serviceAccountKey.json")
         if os.path.exists(_sa_path):
             firebase_admin.initialize_app(credentials.Certificate(_sa_path))
+            print("[Firebase] Initialized OK — Google login enabled")
         else:
-            print("WARNING: serviceAccountKey.json not found — Google login disabled")
+            print(f"WARNING: serviceAccountKey.json not found at {_sa_path} — Google login disabled")
+    else:
+        print("[Firebase] Already initialized")
 except Exception as e:
     print(f"WARNING: Firebase init failed: {e} — Google login disabled")
 
@@ -168,9 +171,13 @@ def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
     except Exception as e:
         err_msg = str(e)
         print(f"[Google Auth] Token verify failed: {err_msg}")
+        if not firebase_admin._apps:
+            raise HTTPException(status_code=503, detail="Google login not configured — serviceAccountKey.json missing on server")
         if "app_not_found" in err_msg or "project" in err_msg.lower():
-            raise HTTPException(status_code=401, detail="Firebase project mismatch — check serviceAccountKey.json matches project 'tzmicha-ai-voice'")
-        raise HTTPException(status_code=401, detail=f"Invalid Google token: {err_msg[:120]}")
+            raise HTTPException(status_code=401, detail="Firebase project mismatch — serviceAccountKey.json must match project 'tzmicha-ai-voice'")
+        if "expired" in err_msg.lower():
+            raise HTTPException(status_code=401, detail="Google token expired — please try again")
+        raise HTTPException(status_code=401, detail=f"Google auth failed: {err_msg[:120]}")
     client = db.query(Client).filter(Client.email == email).first()
     if not client:
         client = Client(

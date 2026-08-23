@@ -43,6 +43,25 @@ from email_service import send_welcome, send_hot_lead_alert, send_call_summary, 
 async def lifespan(app):
     try:
         init_db()
+        # Auto-migrate new columns if missing
+        from sqlalchemy import text
+        from database import engine
+        migrations = [
+            "ALTER TABLE call_logs ADD COLUMN IF NOT EXISTS intent VARCHAR(50)",
+            "ALTER TABLE call_logs ADD COLUMN IF NOT EXISTS emotion VARCHAR(50)",
+            "ALTER TABLE call_logs ADD COLUMN IF NOT EXISTS buying_signals TEXT",
+            "ALTER TABLE call_logs ADD COLUMN IF NOT EXISTS objections TEXT",
+            "ALTER TABLE call_logs ADD COLUMN IF NOT EXISTS recommended_action TEXT",
+            "ALTER TABLE call_logs ADD COLUMN IF NOT EXISTS follow_up_urgency VARCHAR(30)",
+            "ALTER TABLE call_logs ADD COLUMN IF NOT EXISTS key_topics TEXT",
+            "ALTER TABLE call_logs ADD COLUMN IF NOT EXISTS direction VARCHAR(10) DEFAULT 'outbound'",
+            "ALTER TABLE call_logs ADD COLUMN IF NOT EXISTS recording_url TEXT",
+        ]
+        with engine.connect() as c:
+            for m in migrations:
+                try: c.execute(text(m))
+                except: pass
+            c.commit()
     except Exception as e:
         print(f"WARNING: DB init failed: {e} — app will start anyway")
     yield

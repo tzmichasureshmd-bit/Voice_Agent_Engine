@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API = window.location.hostname === 'localhost' ? 'http://localhost:8000' : ''
+const API = window.location.hostname === 'localhost' ? 'http://localhost:8000' : '/api'
 export const ax = axios.create({ baseURL: API, headers: { 'x-admin-key': 'superadmin123' } })
 
 export const PLAN_PRICES = { free:0, starter:5000, growth:15000, pro:30000, enterprise:75000 }

@@ -9,8 +9,8 @@ export default function CurrencyPicker({ cur, setCur }) {
     <div style={{ position: 'relative' }}>
       <button onClick={() => setOpen(p => !p)} style={{
         display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px',
-        borderRadius: '10px', cursor: 'pointer', background: '#0e0e1a',
-        border: '1px solid rgba(124,58,237,0.3)', color: '#f0f0f8',
+        borderRadius: '10px', cursor: 'pointer', background: 'var(--bg-card)',
+        border: '1px solid rgba(124,58,237,0.3)', color: 'var(--text-primary)',
         fontSize: '13px', fontWeight: '600',
       }}>
         {cur.flag} {cur.code} <ChevronDown size={12} />
@@ -20,7 +20,7 @@ export default function CurrencyPicker({ cur, setCur }) {
           <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             style={{
               position: 'absolute', top: '38px', right: 0, zIndex: 999,
-              background: '#0e0e1a', border: '1px solid rgba(124,58,237,0.2)',
+              background: 'var(--bg-card)', border: '1px solid rgba(124,58,237,0.2)',
               borderRadius: '12px', overflow: 'hidden', minWidth: '140px',
               boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
             }}>
@@ -29,7 +29,7 @@ export default function CurrencyPicker({ cur, setCur }) {
                 display: 'flex', alignItems: 'center', gap: '8px', width: '100%',
                 padding: '9px 14px', border: 'none', cursor: 'pointer',
                 background: c.code === cur.code ? 'rgba(124,58,237,0.15)' : 'transparent',
-                color: c.code === cur.code ? '#a78bfa' : '#f0f0f8',
+                color: c.code === cur.code ? '#a78bfa' : 'var(--text-primary)',
                 fontSize: '13px', fontWeight: '500',
               }}>
                 {c.flag} {c.code}

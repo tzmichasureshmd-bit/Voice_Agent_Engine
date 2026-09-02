@@ -56,6 +56,13 @@ async def lifespan(app):
             "ALTER TABLE call_logs ADD COLUMN IF NOT EXISTS key_topics TEXT",
             "ALTER TABLE call_logs ADD COLUMN IF NOT EXISTS direction VARCHAR(10) DEFAULT 'outbound'",
             "ALTER TABLE call_logs ADD COLUMN IF NOT EXISTS recording_url TEXT",
+            # AIEmployee new columns
+            "ALTER TABLE ai_employees ADD COLUMN IF NOT EXISTS language VARCHAR(50) DEFAULT 'English'",
+            "ALTER TABLE ai_employees ADD COLUMN IF NOT EXISTS gender VARCHAR(20) DEFAULT 'Female'",
+            "ALTER TABLE ai_employees ADD COLUMN IF NOT EXISTS type VARCHAR(20) DEFAULT 'outbound'",
+            "ALTER TABLE ai_employees ADD COLUMN IF NOT EXISTS goal VARCHAR(200) DEFAULT 'Lead Generation and Qualification'",
+            "ALTER TABLE ai_employees ADD COLUMN IF NOT EXISTS company_website VARCHAR(200) DEFAULT ''",
+            "ALTER TABLE ai_employees ADD COLUMN IF NOT EXISTS script_mode VARCHAR(20) DEFAULT 'manual'",
         ]
         with engine.connect() as c:
             for m in migrations:
@@ -68,20 +75,100 @@ async def lifespan(app):
 
 app = FastAPI(title="AI Caller - SaaS Platform", version="2.0", lifespan=lifespan)
 
+# ── Rate limiting (slowapi) ──
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 app.add_middleware(GZipMiddleware, minimum_size=1000)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
+# CORS — restrict to known origins. Extra origins can be added via ALLOWED_ORIGINS env (comma-separated).
+_default_origins = [
+    "http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173",
+    "https://voice.tzmicha.com", "https://www.voice.tzmicha.com",
+    "https://app.tzmicha.com",
+]
+_env_origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+ALLOWED_ORIGINS = _env_origins or _default_origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(billing_router)
 
 
 # ===== HELPERS =====
 
+import bcrypt as _bcrypt
+
 def hash_password(password: str) -> str:
+    """Hash a new password with bcrypt."""
+    return _bcrypt.hashpw(password.encode("utf-8"), _bcrypt.gensalt()).decode("utf-8")
+
+def _legacy_sha256(password: str) -> str:
+    """Old hashing scheme — kept only for verifying pre-existing accounts."""
     return hashlib.sha256(password.encode()).hexdigest()
 
-def get_current_client(client_id: str = Header(None, alias="x-client-id"), db: Session = Depends(get_db)):
+def verify_password(password: str, stored_hash: str) -> bool:
+    """
+    Verify a password against the stored hash.
+    Supports bcrypt (new) and legacy SHA-256 (old accounts) for backward compatibility.
+    """
+    if not stored_hash:
+        return False
+    # bcrypt hashes start with $2b$ / $2a$ / $2y$
+    if stored_hash.startswith("$2"):
+        try:
+            return _bcrypt.checkpw(password.encode("utf-8"), stored_hash.encode("utf-8"))
+        except Exception:
+            return False
+    # Fallback: legacy SHA-256 hex compare
+    return _legacy_sha256(password) == stored_hash
+
+def get_current_client(
+    client_id: str = Header(None, alias="x-client-id"),
+    api_key: str = Header(None, alias="x-api-key"),
+    db: Session = Depends(get_db),
+):
+    """
+    Authenticate a request via EITHER:
+      - x-client-id  (dashboard / logged-in session), OR
+      - x-api-key    (developer API access, format tzm_live_xxx)
+    API keys enforce their own monthly call limit and track usage.
+    """
+    # ── Option 1: API key (developer access) ──
+    if api_key:
+        from database import APIKey
+        key_obj = db.query(APIKey).filter(APIKey.key == api_key, APIKey.is_active == True).first()
+        if not key_obj:
+            raise HTTPException(status_code=401, detail="Invalid or revoked API key")
+        # Enforce per-key monthly limit
+        if key_obj.calls_limit and key_obj.calls_used >= key_obj.calls_limit:
+            raise HTTPException(status_code=429, detail="API key call limit reached. Upgrade or rotate your key.")
+        client = db.query(Client).filter(Client.id == key_obj.client_id).first()
+        if not client:
+            raise HTTPException(status_code=401, detail="API key not linked to a valid account")
+        if not client.is_active:
+            raise HTTPException(status_code=403, detail="Account is deactivated")
+        # Track usage
+        key_obj.calls_used = (key_obj.calls_used or 0) + 1
+        key_obj.last_used = datetime.utcnow()
+        db.commit()
+        return client
+
+    # ── Option 2: client id (dashboard session) ──
     if not client_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    client = db.query(Client).filter(Client.id == int(client_id)).first()
+    try:
+        client = db.query(Client).filter(Client.id == int(client_id)).first()
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=401, detail="Invalid client id")
     if not client:
         raise HTTPException(status_code=401, detail="Invalid client")
     return client
@@ -134,7 +221,8 @@ def home():
     return {"message": "AI Caller SaaS Platform", "version": "2.0", "status": "running"}
 
 @app.post("/auth/register")
-def register(data: ClientRegister, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def register(request: Request, data: ClientRegister, db: Session = Depends(get_db)):
     existing = db.query(Client).filter(Client.email == data.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -176,7 +264,8 @@ class GoogleAuthRequest(BaseModel):
     id_token: str
 
 @app.post("/auth/google")
-def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
+@limiter.limit("20/minute")
+def google_auth(request: Request, data: GoogleAuthRequest, db: Session = Depends(get_db)):
     try:
         import firebase_admin
         from firebase_admin import auth as firebase_auth
@@ -211,11 +300,16 @@ def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
     return {"client_id": client.id, "company_name": client.company_name, "contact_name": client.contact_name, "industry": client.industry, "product_info": client.product_info, "ai_name": client.ai_name}
 
 @app.post("/auth/login")
-def login(data: ClientLogin, db: Session = Depends(get_db)):
+@limiter.limit("15/minute")
+def login(request: Request, data: ClientLogin, db: Session = Depends(get_db)):
     try:
-        client = db.query(Client).filter(Client.email == data.email, Client.password == hash_password(data.password)).first()
-        if not client:
+        client = db.query(Client).filter(Client.email == data.email).first()
+        if not client or not verify_password(data.password, client.password):
             raise HTTPException(status_code=401, detail="Invalid email or password")
+        # Transparently upgrade legacy SHA-256 hashes to bcrypt on successful login
+        if not (client.password or "").startswith("$2"):
+            client.password = hash_password(data.password)
+            db.commit()
         return {"client_id": client.id, "company_name": client.company_name, "contact_name": client.contact_name, "industry": client.industry, "product_info": client.product_info, "ai_name": client.ai_name}
     except HTTPException:
         raise
@@ -224,10 +318,15 @@ def login(data: ClientLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Login error: {str(e)[:120]}")
 
 @app.post("/auth/team-login")
-def team_login(data: ClientLogin, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == data.email, User.password == hash_password(data.password)).first()
-    if not user:
+@limiter.limit("15/minute")
+def team_login(request: Request, data: ClientLogin, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == data.email).first()
+    if not user or not verify_password(data.password, user.password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
+    # Transparently upgrade legacy hashes to bcrypt
+    if not (user.password or "").startswith("$2"):
+        user.password = hash_password(data.password)
+        db.commit()
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account deactivated")
     client = db.query(Client).filter(Client.id == user.client_id).first()
@@ -1127,8 +1226,14 @@ class AIEmployeeCreate(BaseModel):
     industry: str = ""
     voice: str = "suhani"
     languages: str = "Telugu, English"
+    language: str = "English"
+    gender: str = "Female"
+    type: str = "outbound"
+    goal: str = "Lead Generation and Qualification"
+    company_website: str = ""
+    script_mode: str = "manual"
     greeting: str = ""
-    script: str
+    script: str = ""
     company_name: str = ""
     company_info: str = ""
     goals: str = ""
@@ -1142,15 +1247,29 @@ class AIEmployeeUpdate(BaseModel):
     company_info: Optional[str] = None
     goals: Optional[str] = None
     languages: Optional[str] = None
+    language: Optional[str] = None
+    gender: Optional[str] = None
+    type: Optional[str] = None
+    goal: Optional[str] = None
+    company_website: Optional[str] = None
+    script_mode: Optional[str] = None
     voice: Optional[str] = None
     status: Optional[str] = None
 
 @app.post("/ai-employees")
 def create_ai_employee(data: AIEmployeeCreate, client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
     from database import AIEmployee
-    emp = AIEmployee(client_id=client.id, name=data.name, role=data.role, industry=data.industry,
+    emp = AIEmployee(
+        client_id=client.id, name=data.name, role=data.role, industry=data.industry,
         voice=data.voice, languages=data.languages, greeting=data.greeting, script=data.script,
-        company_name=data.company_name, company_info=data.company_info, goals=data.goals)
+        company_name=data.company_name, company_info=data.company_info, goals=data.goals,
+        language=getattr(data, 'language', 'English'),
+        gender=getattr(data, 'gender', 'Female'),
+        type=getattr(data, 'type', 'outbound'),
+        goal=getattr(data, 'goal', 'Lead Generation and Qualification'),
+        company_website=getattr(data, 'company_website', ''),
+        script_mode=getattr(data, 'script_mode', 'manual'),
+    )
     db.add(emp); db.commit(); db.refresh(emp)
     return {"id": emp.id, "message": f"{emp.name} created"}
 
@@ -1158,7 +1277,19 @@ def create_ai_employee(data: AIEmployeeCreate, client: Client = Depends(get_curr
 def get_ai_employees(client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
     from database import AIEmployee
     emps = db.query(AIEmployee).filter(AIEmployee.client_id == client.id).all()
-    return {"total": len(emps), "employees": [{"id": e.id, "name": e.name, "role": e.role, "industry": e.industry, "voice": e.voice, "languages": e.languages, "greeting": e.greeting, "script": e.script, "company_name": e.company_name, "company_info": e.company_info, "goals": e.goals, "status": e.status, "total_calls": e.total_calls, "leads_qualified": e.leads_qualified} for e in emps]}
+    return {"total": len(emps), "employees": [{
+        "id": e.id, "name": e.name, "role": e.role, "industry": e.industry,
+        "voice": e.voice, "languages": e.languages,
+        "language": getattr(e, 'language', 'English') or 'English',
+        "gender": getattr(e, 'gender', 'Female') or 'Female',
+        "type": getattr(e, 'type', 'outbound') or 'outbound',
+        "goal": getattr(e, 'goal', '') or e.role or '',
+        "company_website": getattr(e, 'company_website', '') or '',
+        "script_mode": getattr(e, 'script_mode', 'manual') or 'manual',
+        "greeting": e.greeting, "script": e.script,
+        "company_name": e.company_name, "company_info": e.company_info, "goals": e.goals,
+        "status": e.status, "total_calls": e.total_calls, "leads_qualified": e.leads_qualified
+    } for e in emps]}
 
 @app.put("/ai-employees/{emp_id}")
 def update_ai_employee(emp_id: int, data: AIEmployeeUpdate, client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
@@ -1173,6 +1304,12 @@ def update_ai_employee(emp_id: int, data: AIEmployeeUpdate, client: Client = Dep
     if data.company_info is not None: emp.company_info = data.company_info
     if data.goals is not None: emp.goals = data.goals
     if data.languages is not None: emp.languages = data.languages
+    if data.language is not None: emp.language = data.language
+    if data.gender is not None: emp.gender = data.gender
+    if data.type is not None: emp.type = data.type
+    if data.goal is not None: emp.goal = data.goal
+    if data.company_website is not None: emp.company_website = data.company_website
+    if data.script_mode is not None: emp.script_mode = data.script_mode
     if data.voice is not None: emp.voice = data.voice
     if data.status is not None: emp.status = data.status
     db.commit()
@@ -1488,23 +1625,31 @@ class ResetPasswordRequest(BaseModel):
     new_password: str
     reset_code: str
 
-reset_codes = {}  # email -> code (in-memory, simple)
+# email -> {"code": str, "expires": epoch_seconds}. In-memory with 15-min expiry.
+reset_codes = {}
+RESET_CODE_TTL = 15 * 60  # 15 minutes
 
 @app.post("/auth/forgot-password")
-def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def forgot_password(request: Request, data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     client = db.query(Client).filter(Client.email == data.email).first()
     if not client:
         return {"message": "If email exists, reset code sent"}  # don't reveal
     import random
     code = str(random.randint(100000, 999999))
-    reset_codes[data.email] = code
+    reset_codes[data.email] = {"code": code, "expires": time.time() + RESET_CODE_TTL}
     # In production: send via email. For now return code directly (dev mode)
-    return {"message": "Reset code generated", "code": code, "note": "In production this will be emailed"}
+    return {"message": "Reset code generated", "code": code, "expires_in_minutes": 15, "note": "In production this will be emailed"}
 
 @app.post("/auth/reset-password")
-def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
-    stored = reset_codes.get(data.email)
-    if not stored or stored != data.reset_code:
+@limiter.limit("5/minute")
+def reset_password(request: Request, data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    entry = reset_codes.get(data.email)
+    # Validate existence, expiry, and code match
+    if not entry or entry.get("expires", 0) < time.time():
+        reset_codes.pop(data.email, None)
+        raise HTTPException(status_code=400, detail="Invalid or expired reset code")
+    if entry.get("code") != data.reset_code:
         raise HTTPException(status_code=400, detail="Invalid or expired reset code")
     client = db.query(Client).filter(Client.email == data.email).first()
     if not client:
@@ -1740,6 +1885,20 @@ def admin_all_payments(admin_key: str = Header(None, alias="x-admin-key"), db: S
         "amount": o.amount_inr, "status": o.status,
         "created_at": str(o.created_at)
     } for o in orders]}
+
+# ===== SERVE TTS AUDIO FILES (Exotel fetches these for <Play>) =====
+
+from fastapi.responses import FileResponse
+import pathlib
+
+@app.get("/voice/audio/{filename}")
+def serve_audio(filename: str):
+    """Serve Edge TTS generated mp3 files to Exotel <Play> tag"""
+    audio_path = pathlib.Path(__file__).parent / "audio_cache" / filename
+    if not audio_path.exists():
+        raise HTTPException(status_code=404, detail="Audio not found")
+    return FileResponse(str(audio_path), media_type="audio/mpeg")
+
 
 # ===== RUN =====
 

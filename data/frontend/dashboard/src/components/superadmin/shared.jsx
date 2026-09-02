@@ -8,9 +8,9 @@ export const PLAN_COLOR  = { free:'#6b7280', starter:'#06b6d4', growth:'#a78bfa'
 export const CAT_COLOR   = { hot:'#f87171', warm:'#fbbf24', cold:'#06b6d4' }
 
 export const S = {
-  card: { background:'#0e0e1a', border:'1px solid #1e1e30', borderRadius:'14px', padding:'16px' },
-  th:   { textAlign:'left', padding:'9px 12px', fontSize:'10px', fontWeight:'700', color:'#33334a', textTransform:'uppercase', letterSpacing:'0.6px', whiteSpace:'nowrap', borderBottom:'1px solid #1a1a2e' },
-  td:   { padding:'9px 12px', fontSize:'12px', color:'#c0c0d8', borderBottom:'1px solid #0e0e1a', whiteSpace:'nowrap' },
+  card: { background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:'14px', padding:'16px' },
+  th:   { textAlign:'left', padding:'9px 12px', fontSize:'10px', fontWeight:'700', color:'var(--text-dim)', textTransform:'uppercase', letterSpacing:'0.6px', whiteSpace:'nowrap', borderBottom:'1px solid var(--border)' },
+  td:   { padding:'9px 12px', fontSize:'12px', color:'var(--text-secondary)', borderBottom:'1px solid var(--border)', whiteSpace:'nowrap' },
 }
 
 export function PlanBadge({ plan }) {
@@ -24,7 +24,7 @@ export function StatusBadge({ active }) {
 
 export function MiniBar({ pct, color }) {
   return (
-    <div style={{ flex:1, height:'5px', background:'#1a1a2e', borderRadius:'999px' }}>
+    <div style={{ flex:1, height:'5px', background:'var(--border)', borderRadius:'999px' }}>
       <div style={{ height:'5px', borderRadius:'999px', background:color, width:`${Math.min(pct||0,100)}%` }} />
     </div>
   )

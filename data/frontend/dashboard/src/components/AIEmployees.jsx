@@ -409,12 +409,12 @@ export default function AIEmployees() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
           style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
           <div>
-            <h1 style={{ fontSize: '26px', fontWeight: '800', color: '#f0f0f8' }}>AI Agents</h1>
-            <p style={{ fontSize: '13px', color: '#55556a', marginTop: '4px' }}>Each agent is a trained voice caller with its own script, voice and goal.</p>
+            <h1 style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text-primary)' }}>AI Agents</h1>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>Each agent is a trained voice caller with its own script, voice and goal.</p>
           </div>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <div style={{ position: 'relative' }}>
-              <Search size={14} color="#55556a" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+              <Search size={14} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
               <input type="text" placeholder="Search agents..."
                 value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                 className="input" style={{ paddingLeft: '34px', fontSize: '12px', width: '200px' }} />
@@ -432,7 +432,7 @@ export default function AIEmployees() {
           {filteredEmployees.length === 0 ? (
             <div style={{
               gridColumn: '1/-1', textAlign: 'center', padding: '80px 0',
-              background: '#0e0e1a', border: '1px solid #1e1e30', borderRadius: '20px',
+              background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '20px',
             }}>
               <div style={{
                 width: 56, height: 56, borderRadius: '18px',
@@ -442,8 +442,8 @@ export default function AIEmployees() {
               }}>
                 <Bot size={24} color="#a78bfa" />
               </div>
-              <p style={{ fontSize: '15px', fontWeight: '700', color: '#55556a' }}>Create your first assistant</p>
-              <p style={{ fontSize: '12px', color: '#33334a', marginTop: '4px' }}>Get started by creating an AI voice assistant</p>
+              <p style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-muted)' }}>Create your first assistant</p>
+              <p style={{ fontSize: '12px', color: 'var(--text-dim)', marginTop: '4px' }}>Get started by creating an AI voice assistant</p>
               <motion.button whileTap={{ scale: 0.97 }}
                 onClick={() => { resetForm(); setView('create') }}
                 className="btn btn-primary" style={{ marginTop: '18px' }}>
@@ -455,7 +455,7 @@ export default function AIEmployees() {
               <motion.div key={emp.id}
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                 style={{
-                  background: '#0e0e1a', border: '1px solid #1e1e30', borderRadius: '16px',
+                  background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px',
                   overflow: 'hidden', cursor: 'pointer', transition: 'border-color 0.2s',
                 }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(124,58,237,0.25)'}
@@ -473,27 +473,27 @@ export default function AIEmployees() {
                     </div>
                     <span style={{
                       background: i === 0 ? 'rgba(124,58,237,0.15)' : 'rgba(255,255,255,0.06)',
-                      border: `1px solid ${i === 0 ? 'rgba(124,58,237,0.3)' : '#1e1e30'}`,
+                      border: `1px solid ${i === 0 ? 'rgba(124,58,237,0.3)' : 'var(--border)'}`,
                       borderRadius: '999px', padding: '3px 10px', fontSize: '10px',
-                      fontWeight: '700', color: i === 0 ? '#a78bfa' : '#55556a',
+                      fontWeight: '700', color: i === 0 ? '#a78bfa' : 'var(--text-muted)',
                     }}>
                       {i === 0 ? '✦ Premium' : 'Normal'}
                     </span>
                   </div>
-                  <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#f0f0f8', marginBottom: '4px' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '4px' }}>
                     {emp.name || 'Assistant'} — {emp.role || emp.goal || 'Sales'}
                   </h3>
-                  <p style={{ fontSize: '12px', color: '#55556a', marginBottom: '12px', lineHeight: 1.5 }}>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px', lineHeight: 1.5 }}>
                     {emp.script ? emp.script.slice(0, 60) + '...' : getGoalDisplay(emp)}
                   </p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '14px' }}>
-                    <span style={{ fontSize: '11px', color: '#55556a' }}>🌐 {getLanguageString(emp)}</span>
-                    <span style={{ fontSize: '11px', color: '#33334a' }}>·</span>
-                    <span style={{ fontSize: '11px', color: '#55556a' }}>{emp.gender || 'Female'}</span>
-                    <span style={{ fontSize: '11px', color: '#33334a' }}>·</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>🌐 {getLanguageString(emp)}</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-dim)' }}>·</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{emp.gender || 'Female'}</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-dim)' }}>·</span>
                     <span style={{ fontSize: '11px', color: '#a78bfa', fontWeight: '600' }}>$2.50/min</span>
                   </div>
-                  <div style={{ height: '1px', background: '#1e1e30', marginBottom: '14px' }} />
+                  <div style={{ height: '1px', background: 'var(--border)', marginBottom: '14px' }} />
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <motion.button whileTap={{ scale: 0.97 }}
                       onClick={(e) => { e.stopPropagation(); openDetail(emp) }}
@@ -537,20 +537,20 @@ export default function AIEmployees() {
   // ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ──
   if (view === 'create') {
     return (
-      <div style={{ display: 'flex', height: 'calc(100vh - 100px)', gap: '0', background: '#0d0d1a' }}>
+      <div style={{ display: 'flex', height: 'calc(100vh - 100px)', gap: '0', background: 'var(--bg-primary)' }}>
         {/* ── LEFT PANEL: Configuration ── */}
         <div style={{
-          width: '280px', minWidth: '280px', background: '#0e0e1a',
-          borderRight: '1px solid #1e1e30', overflowY: 'auto',
+          width: '280px', minWidth: '280px', background: 'var(--bg-card)',
+          borderRight: '1px solid var(--border)', overflowY: 'auto',
           display: 'flex', flexDirection: 'column',
         }}>
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '16px 18px', borderBottom: '1px solid #1e1e30',
+            padding: '16px 18px', borderBottom: '1px solid var(--border)',
           }}>
-            <p style={{ fontSize: '11px', fontWeight: '600', color: '#55556a', textTransform: 'uppercase', letterSpacing: '1px' }}>CONFIGURATION</p>
+            <p style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>CONFIGURATION</p>
             <button onClick={() => setView('list')}
-              style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', width: '28px', height: '28px', cursor: 'pointer', color: '#55556a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', width: '28px', height: '28px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <X size={14} />
             </button>
           </div>
@@ -562,7 +562,7 @@ export default function AIEmployees() {
                 onClick={() => setGeneralExpanded(!generalExpanded)}
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', marginBottom: '10px' }}>
                 <p style={{ fontSize: '10px', fontWeight: '700', color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '1px' }}>General</p>
-                {generalExpanded ? <ChevronUp size={12} color="#55556a" /> : <ChevronDown size={12} color="#55556a" />}
+                {generalExpanded ? <ChevronUp size={12} color="var(--text-muted)" /> : <ChevronDown size={12} color="var(--text-muted)" />}
               </div>
 
               <AnimatePresence>
@@ -570,13 +570,13 @@ export default function AIEmployees() {
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <div>
-                        <label style={{ fontSize: '10px', fontWeight: '600', color: '#55556a', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Type</label>
+                        <label style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Type</label>
                         <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className="input" style={{ fontSize: '11px' }}>
                           {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label style={{ fontSize: '10px', fontWeight: '600', color: '#55556a', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Language</label>
+                        <label style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Language</label>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '4px' }}>
                           {LANGUAGES.slice(0, 3).map(lang => (
                             <button key={lang}
@@ -591,8 +591,8 @@ export default function AIEmployees() {
                                 padding: '3px 8px', borderRadius: '6px', border: '1px solid',
                                 fontSize: '10px', cursor: 'pointer',
                                 background: form.languages.includes(lang) ? 'rgba(124,58,237,0.15)' : 'transparent',
-                                borderColor: form.languages.includes(lang) ? 'rgba(124,58,237,0.3)' : '#1e1e30',
-                                color: form.languages.includes(lang) ? '#a78bfa' : '#55556a',
+                                borderColor: form.languages.includes(lang) ? 'rgba(124,58,237,0.3)' : 'var(--border)',
+                                color: form.languages.includes(lang) ? '#a78bfa' : 'var(--text-muted)',
                               }}>
                               {lang}
                             </button>
@@ -600,38 +600,38 @@ export default function AIEmployees() {
                         </div>
                       </div>
                       <div>
-                        <label style={{ fontSize: '10px', fontWeight: '600', color: '#55556a', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Company Name</label>
+                        <label style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Company Name</label>
                         <input type="text" placeholder="Enter company name" value={form.company_name}
                           onChange={e => setForm({ ...form, company_name: e.target.value })} className="input" style={{ fontSize: '11px' }} />
                       </div>
                       <div>
-                        <label style={{ fontSize: '10px', fontWeight: '600', color: '#55556a', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Company Website</label>
-                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid #1e1e30', borderRadius: '8px', padding: '0 8px' }}>
-                          <span style={{ fontSize: '11px', color: '#55556a', whiteSpace: 'nowrap' }}>https://</span>
+                        <label style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Company Website</label>
+                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0 8px' }}>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>https://</span>
                           <input type="text" placeholder="company-website.com" value={form.company_website}
                             onChange={e => setForm({ ...form, company_website: e.target.value })}
-                            style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#f0f0f8', fontSize: '11px', padding: '7px 4px' }} />
+                            style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: '11px', padding: '7px 4px' }} />
                         </div>
                       </div>
                       <div>
-                        <label style={{ fontSize: '10px', fontWeight: '600', color: '#55556a', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Gender</label>
+                        <label style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Gender</label>
                         <select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })} className="input" style={{ fontSize: '11px' }}>
                           {GENDERS.map(g => <option key={g} value={g}>{g}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label style={{ fontSize: '10px', fontWeight: '600', color: '#55556a', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Name of Agent</label>
+                        <label style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Name of Agent</label>
                         <input type="text" placeholder="e.g. Priya" value={form.name}
                           onChange={e => setForm({ ...form, name: e.target.value })} className="input" style={{ fontSize: '11px' }} />
                       </div>
                       <div>
-                        <label style={{ fontSize: '10px', fontWeight: '600', color: '#55556a', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Goal</label>
+                        <label style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Goal</label>
                         <select value={form.goal} onChange={e => setForm({ ...form, goal: e.target.value })} className="input" style={{ fontSize: '11px' }}>
                           {GOALS.map(g => <option key={g} value={g}>{g}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label style={{ fontSize: '10px', fontWeight: '600', color: '#55556a', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Assistant Image</label>
+                        <label style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Assistant Image</label>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div style={{
                             width: 36, height: 36, borderRadius: '10px',
@@ -657,16 +657,16 @@ export default function AIEmployees() {
           {/* Top bar */}
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '16px 24px', borderBottom: '1px solid #1e1e30',
+            padding: '16px 24px', borderBottom: '1px solid var(--border)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <button onClick={() => setView('list')}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#55556a', display: 'flex', padding: '4px' }}>
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', padding: '4px' }}>
                 <ChevronLeft size={18} />
               </button>
               <div>
-                <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#f0f0f8' }}>New Assistant</h2>
-                <p style={{ fontSize: '11px', color: '#55556a', marginTop: '2px' }}>Outbound Agent</p>
+                <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)' }}>New Assistant</h2>
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Outbound Agent</p>
               </div>
             </div>
             <motion.button whileTap={{ scale: 0.97 }} onClick={createEmployee} disabled={loading || !form.name}
@@ -684,7 +684,7 @@ export default function AIEmployees() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Sparkles size={14} color="#a78bfa" />
-              <span style={{ fontSize: '12px', color: '#f0f0f8' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-primary)' }}>
                 A few steps left — Finish setting up your assistant
               </span>
             </div>
@@ -693,7 +693,7 @@ export default function AIEmployees() {
 
           {/* Opening Message */}
           <div style={{ padding: '0 24px 16px' }}>
-            <label style={{ fontSize: '11px', fontWeight: '600', color: '#f0f0f8', marginBottom: '6px', display: 'block' }}>
+            <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px', display: 'block' }}>
               Call Opening Message <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <textarea
@@ -706,7 +706,7 @@ export default function AIEmployees() {
 
           {/* Script Section */}
           <div style={{ padding: '0 24px 24px' }}>
-            <label style={{ fontSize: '11px', fontWeight: '600', color: '#f0f0f8', marginBottom: '8px', display: 'block' }}>
+            <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px', display: 'block' }}>
               Script
             </label>
             <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
@@ -715,8 +715,8 @@ export default function AIEmployees() {
                 style={{
                   padding: '6px 14px', borderRadius: '8px', fontSize: '11px', fontWeight: '600', cursor: 'pointer',
                   background: form.script_mode === 'ai' ? 'rgba(124,58,237,0.15)' : 'transparent',
-                  border: `1px solid ${form.script_mode === 'ai' ? 'rgba(124,58,237,0.3)' : '#1e1e30'}`,
-                  color: form.script_mode === 'ai' ? '#a78bfa' : '#55556a',
+                  border: `1px solid ${form.script_mode === 'ai' ? 'rgba(124,58,237,0.3)' : 'var(--border)'}`,
+                  color: form.script_mode === 'ai' ? '#a78bfa' : 'var(--text-muted)',
                 }}>
                 <Sparkles size={12} style={{ marginRight: '4px' }} /> AI Assistant
               </motion.button>
@@ -725,8 +725,8 @@ export default function AIEmployees() {
                 style={{
                   padding: '6px 14px', borderRadius: '8px', fontSize: '11px', fontWeight: '600', cursor: 'pointer',
                   background: form.script_mode === 'manual' ? 'rgba(124,58,237,0.15)' : 'transparent',
-                  border: `1px solid ${form.script_mode === 'manual' ? 'rgba(124,58,237,0.3)' : '#1e1e30'}`,
-                  color: form.script_mode === 'manual' ? '#a78bfa' : '#55556a',
+                  border: `1px solid ${form.script_mode === 'manual' ? 'rgba(124,58,237,0.3)' : 'var(--border)'}`,
+                  color: form.script_mode === 'manual' ? '#a78bfa' : 'var(--text-muted)',
                 }}>
                 <PenLine size={12} style={{ marginRight: '4px' }} /> Manual Script
               </motion.button>
@@ -743,17 +743,17 @@ export default function AIEmployees() {
 
         {/* ── RIGHT PANEL: Progress Checklist ── */}
         <div style={{
-          width: '280px', minWidth: '280px', background: '#0e0e1a',
-          borderLeft: '1px solid #1e1e30', overflowY: 'auto',
+          width: '280px', minWidth: '280px', background: 'var(--bg-card)',
+          borderLeft: '1px solid var(--border)', overflowY: 'auto',
           display: 'flex', flexDirection: 'column',
         }}>
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '16px 18px', borderBottom: '1px solid #1e1e30',
+            padding: '16px 18px', borderBottom: '1px solid var(--border)',
           }}>
-            <p style={{ fontSize: '11px', fontWeight: '600', color: '#55556a', textTransform: 'uppercase', letterSpacing: '1px' }}>PROGRESS</p>
+            <p style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>PROGRESS</p>
             <button onClick={() => setProgressExpanded(!progressExpanded)}
-              style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', width: '28px', height: '28px', cursor: 'pointer', color: '#55556a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', width: '28px', height: '28px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {progressExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
           </div>
@@ -761,10 +761,10 @@ export default function AIEmployees() {
           {progressExpanded && (
             <div style={{ padding: '16px 18px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <span style={{ fontSize: '11px', color: '#55556a' }}>{progressCount} / 6 sections</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{progressCount} / 6 sections</span>
                 <span style={{ fontSize: '11px', fontWeight: '700', color: '#a78bfa' }}>{progressPercent}%</span>
               </div>
-              <div style={{ height: '4px', background: '#1e1e30', borderRadius: '999px', marginBottom: '8px', overflow: 'hidden' }}>
+              <div style={{ height: '4px', background: 'var(--border)', borderRadius: '999px', marginBottom: '8px', overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${progressPercent}%`, background: progressPercent >= 90 ? '#10b981' : progressPercent >= 70 ? '#fbbf24' : '#7c3aed', borderRadius: '999px', transition: 'width 0.3s' }} />
               </div>
               {(() => { const r = getReadinessLabel(progressPercent); return (
@@ -780,9 +780,9 @@ export default function AIEmployees() {
                       {isChecked ? (
                         <CheckSquare size={14} color="#7c3aed" />
                       ) : (
-                        <Square size={14} color="#33334a" />
+                        <Square size={14} color="var(--text-dim)" />
                       )}
-                      <span style={{ fontSize: '11px', color: isChecked ? '#f0f0f8' : '#33334a', fontWeight: isChecked ? '500' : '400' }}>
+                      <span style={{ fontSize: '11px', color: isChecked ? 'var(--text-primary)' : 'var(--text-dim)', fontWeight: isChecked ? '500' : '400' }}>
                         {item.label}
                       </span>
                     </div>
@@ -805,26 +805,26 @@ export default function AIEmployees() {
       agentStatus === 'thinking' ? 'Thinking...' :
       agentStatus === 'speaking' ? 'Speaking...' : 'Ready'
 
-    const statusColor = agentStatus === 'idle' ? '#55556a' :
+    const statusColor = agentStatus === 'idle' ? 'var(--text-muted)' :
       agentStatus === 'listening' ? '#34d399' :
       agentStatus === 'thinking' ? '#fbbf24' :
-      agentStatus === 'speaking' ? '#a78bfa' : '#55556a'
+      agentStatus === 'speaking' ? '#a78bfa' : 'var(--text-muted)'
 
     return (
-      <div style={{ display: 'flex', height: 'calc(100vh - 100px)', gap: '0', background: '#0d0d1a' }}>
+      <div style={{ display: 'flex', height: 'calc(100vh - 100px)', gap: '0', background: 'var(--bg-primary)' }}>
         {/* ── LEFT PANEL: Configuration ── */}
         <div style={{
-          width: '260px', minWidth: '260px', background: '#0e0e1a',
-          borderRight: '1px solid #1e1e30', overflowY: 'auto',
+          width: '260px', minWidth: '260px', background: 'var(--bg-card)',
+          borderRight: '1px solid var(--border)', overflowY: 'auto',
           display: 'flex', flexDirection: 'column',
         }}>
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '16px 18px', borderBottom: '1px solid #1e1e30',
+            padding: '16px 18px', borderBottom: '1px solid var(--border)',
           }}>
-            <p style={{ fontSize: '11px', fontWeight: '600', color: '#55556a', textTransform: 'uppercase', letterSpacing: '1px' }}>CONFIGURATION</p>
+            <p style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>CONFIGURATION</p>
             <button onClick={() => setView('list')}
-              style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', width: '28px', height: '28px', cursor: 'pointer', color: '#55556a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', width: '28px', height: '28px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <X size={14} />
             </button>
           </div>
@@ -832,13 +832,13 @@ export default function AIEmployees() {
           <div style={{ padding: '14px 16px', flex: 1, overflowY: 'auto' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div>
-                <label style={{ fontSize: '10px', fontWeight: '600', color: '#55556a', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Type</label>
+                <label style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Type</label>
                 <select value={detailForm.type} onChange={e => setDetailForm({ ...detailForm, type: e.target.value })} className="input" style={{ fontSize: '11px' }}>
                   {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: '10px', fontWeight: '600', color: '#55556a', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Language</label>
+                <label style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Language</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                   {LANGUAGES.slice(0, 3).map(lang => (
                     <button key={lang}
@@ -853,8 +853,8 @@ export default function AIEmployees() {
                         padding: '3px 8px', borderRadius: '6px', border: '1px solid',
                         fontSize: '10px', cursor: 'pointer',
                         background: detailForm.languages.includes(lang) ? 'rgba(124,58,237,0.15)' : 'transparent',
-                        borderColor: detailForm.languages.includes(lang) ? 'rgba(124,58,237,0.3)' : '#1e1e30',
-                        color: detailForm.languages.includes(lang) ? '#a78bfa' : '#55556a',
+                        borderColor: detailForm.languages.includes(lang) ? 'rgba(124,58,237,0.3)' : 'var(--border)',
+                        color: detailForm.languages.includes(lang) ? '#a78bfa' : 'var(--text-muted)',
                       }}>
                       {lang}
                     </button>
@@ -862,38 +862,38 @@ export default function AIEmployees() {
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: '10px', fontWeight: '600', color: '#55556a', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Company Name</label>
+                <label style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Company Name</label>
                 <input type="text" placeholder="Company name" value={detailForm.company_name}
                   onChange={e => setDetailForm({ ...detailForm, company_name: e.target.value })} className="input" style={{ fontSize: '11px' }} />
               </div>
               <div>
-                <label style={{ fontSize: '10px', fontWeight: '600', color: '#55556a', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Company Website</label>
-                <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid #1e1e30', borderRadius: '8px', padding: '0 8px' }}>
-                  <span style={{ fontSize: '11px', color: '#55556a', whiteSpace: 'nowrap' }}>https://</span>
+                <label style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Company Website</label>
+                <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0 8px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>https://</span>
                   <input type="text" placeholder="company-website.com" value={detailForm.company_website}
                     onChange={e => setDetailForm({ ...detailForm, company_website: e.target.value })}
-                    style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#f0f0f8', fontSize: '11px', padding: '7px 4px' }} />
+                    style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: '11px', padding: '7px 4px' }} />
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: '10px', fontWeight: '600', color: '#55556a', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Gender</label>
+                <label style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Gender</label>
                 <select value={detailForm.gender} onChange={e => setDetailForm({ ...detailForm, gender: e.target.value })} className="input" style={{ fontSize: '11px' }}>
                   {GENDERS.map(g => <option key={g} value={g}>{g}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: '10px', fontWeight: '600', color: '#55556a', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Name of Agent</label>
+                <label style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Name of Agent</label>
                 <input type="text" placeholder="e.g. Priya" value={detailForm.name}
                   onChange={e => setDetailForm({ ...detailForm, name: e.target.value })} className="input" style={{ fontSize: '11px' }} />
               </div>
               <div>
-                <label style={{ fontSize: '10px', fontWeight: '600', color: '#55556a', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Goal</label>
+                <label style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Goal</label>
                 <select value={detailForm.goal} onChange={e => setDetailForm({ ...detailForm, goal: e.target.value })} className="input" style={{ fontSize: '11px' }}>
                   {GOALS.map(g => <option key={g} value={g}>{g}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: '10px', fontWeight: '600', color: '#55556a', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Assistant Image</label>
+                <label style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Assistant Image</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{
                     width: 36, height: 36, borderRadius: '10px',
@@ -911,21 +911,21 @@ export default function AIEmployees() {
         </div>
 
         {/* ── CENTER PANEL: Live Agent ── */}
-        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', background: '#0d0d1a' }}>
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)' }}>
           {/* Top bar */}
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '16px 24px', borderBottom: '1px solid #1e1e30',
-            background: '#0e0e1a',
+            padding: '16px 24px', borderBottom: '1px solid var(--border)',
+            background: 'var(--bg-card)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <button onClick={() => setView('list')}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#55556a', display: 'flex', padding: '4px' }}>
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', padding: '4px' }}>
                 <ChevronLeft size={18} />
               </button>
               <div>
-                <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#f0f0f8' }}>{detailForm.name || 'Assistant'}</h2>
-                <p style={{ fontSize: '11px', color: '#55556a', marginTop: '2px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)' }}>{detailForm.name || 'Assistant'}</h2>
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
                   {detailForm.type || 'Outbound'} Agent · {detailForm.goal || 'Lead Generation'}
                 </p>
               </div>
@@ -953,8 +953,8 @@ export default function AIEmployees() {
                 }}>
                   {detailForm.name ? getInitials(detailForm.name) : '🤖'}
                 </div>
-                <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#f0f0f8' }}>{detailForm.name || 'Assistant'}</h3>
-                <p style={{ fontSize: '12px', color: '#55556a' }}>Ready to test</p>
+                <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>{detailForm.name || 'Assistant'}</h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Ready to test</p>
 
                 {/* Lead form */}
                 <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
@@ -966,11 +966,11 @@ export default function AIEmployees() {
                   </div>
                   <input type="email" placeholder="Email" value={leadForm.email}
                     onChange={e => setLeadForm({ ...leadForm, email: e.target.value })} className="input" style={{ fontSize: '12px' }} />
-                  <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid #1e1e30', borderRadius: '8px', padding: '0 8px' }}>
-                    <span style={{ fontSize: '12px', color: '#55556a', whiteSpace: 'nowrap' }}>🇮🇳 +91</span>
+                  <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0 8px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>🇮🇳 +91</span>
                     <input type="tel" placeholder="9876543210" value={leadForm.phone}
                       onChange={e => setLeadForm({ ...leadForm, phone: e.target.value })}
-                      style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#f0f0f8', fontSize: '12px', padding: '7px 4px' }} />
+                      style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: '12px', padding: '7px 4px' }} />
                   </div>
                   <select value={leadForm.dialer} onChange={e => setLeadForm({ ...leadForm, dialer: e.target.value })} className="input" style={{ fontSize: '12px' }}>
                     <option value="">Select dialer</option>
@@ -1015,7 +1015,7 @@ export default function AIEmployees() {
                     position: 'absolute', bottom: -4, right: -4,
                     width: 20, height: 20, borderRadius: '50%',
                     background: statusColor,
-                    border: '3px solid #0d0d1a',
+                    border: '3px solid var(--bg-primary)',
                     boxShadow: agentStatus === 'listening'
                       ? '0 0 12px rgba(52,211,153,0.6)'
                       : agentStatus === 'speaking'
@@ -1026,7 +1026,7 @@ export default function AIEmployees() {
 
                 {/* Agent name + status */}
                 <div style={{ textAlign: 'center' }}>
-                  <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#f0f0f8' }}>{detailForm.name || 'Assistant'}</h3>
+                  <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)' }}>{detailForm.name || 'Assistant'}</h3>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '6px' }}>
                     <div style={{
                       width: 8, height: 8, borderRadius: '50%',
@@ -1090,20 +1090,20 @@ export default function AIEmployees() {
 
         {/* ── RIGHT PANEL: CHAT ── */}
         <div style={{
-          width: '320px', minWidth: '320px', background: '#0e0e1a',
-          borderLeft: '1px solid #1e1e30', overflowY: 'auto',
+          width: '320px', minWidth: '320px', background: 'var(--bg-card)',
+          borderLeft: '1px solid var(--border)', overflowY: 'auto',
           display: 'flex', flexDirection: 'column',
         }}>
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '16px 18px', borderBottom: '1px solid #1e1e30',
+            padding: '16px 18px', borderBottom: '1px solid var(--border)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <MessageSquareText size={14} color="#a78bfa" />
-              <p style={{ fontSize: '11px', fontWeight: '600', color: '#55556a', textTransform: 'uppercase', letterSpacing: '1px' }}>CHAT</p>
+              <p style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>CHAT</p>
             </div>
             <button onClick={() => setView('list')}
-              style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', width: '28px', height: '28px', cursor: 'pointer', color: '#55556a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', width: '28px', height: '28px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <X size={14} />
             </button>
           </div>
@@ -1111,13 +1111,13 @@ export default function AIEmployees() {
           {/* Chat messages */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {chatMessages.length === 0 && !callActive && (
-              <div style={{ textAlign: 'center', padding: '40px 0', color: '#33334a' }}>
-                <MessageSquareText size={24} color="#1e1e30" style={{ marginBottom: '8px' }} />
+              <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-dim)' }}>
+                <MessageSquareText size={24} color="var(--border)" style={{ marginBottom: '8px' }} />
                 <p style={{ fontSize: '12px' }}>Start a call to see the conversation</p>
               </div>
             )}
             {chatMessages.length === 0 && callActive && (
-              <div style={{ textAlign: 'center', padding: '20px 0', color: '#55556a' }}>
+              <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-muted)' }}>
                 <Loader2 size={20} color="#a78bfa" style={{ animation: 'spin 1s linear infinite', marginBottom: '8px' }} />
                 <p style={{ fontSize: '11px' }}>Waiting for conversation...</p>
               </div>
@@ -1135,24 +1135,24 @@ export default function AIEmployees() {
                 <div style={{
                   width: 26, height: 26, borderRadius: '8px',
                   background: msg.role === 'user' ? 'rgba(124,58,237,0.15)' : 'rgba(255,255,255,0.05)',
-                  border: `1px solid ${msg.role === 'user' ? 'rgba(124,58,237,0.2)' : '#1e1e30'}`,
+                  border: `1px solid ${msg.role === 'user' ? 'rgba(124,58,237,0.2)' : 'var(--border)'}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   flexShrink: 0,
                 }}>
-                  {msg.role === 'user' ? <User size={12} color="#a78bfa" /> : <Bot size={12} color="#55556a" />}
+                  {msg.role === 'user' ? <User size={12} color="#a78bfa" /> : <Bot size={12} color="var(--text-muted)" />}
                 </div>
                 <div style={{
                   padding: '8px 12px', borderRadius: '12px', fontSize: '12px', lineHeight: 1.5, maxWidth: '80%',
                   background: msg.role === 'user' ? 'rgba(124,58,237,0.1)' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${msg.role === 'user' ? 'rgba(124,58,237,0.15)' : '#1e1e30'}`,
-                  color: '#f0f0f8',
+                  border: `1px solid ${msg.role === 'user' ? 'rgba(124,58,237,0.15)' : 'var(--border)'}`,
+                  color: 'var(--text-primary)',
                 }}>
-                  <span style={{ fontWeight: '600', fontSize: '10px', color: msg.role === 'user' ? '#a78bfa' : '#55556a', display: 'block', marginBottom: '2px' }}>
+                  <span style={{ fontWeight: '600', fontSize: '10px', color: msg.role === 'user' ? '#a78bfa' : 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>
                     {msg.role === 'user' ? 'You (STT)' : 'AI (TTS)'}
                   </span>
                   {msg.text}
                   {msg.latency && (
-                    <span style={{ fontSize: '9px', color: '#55556a', marginLeft: '6px', display: 'block', marginTop: '4px' }}>
+                    <span style={{ fontSize: '9px', color: 'var(--text-muted)', marginLeft: '6px', display: 'block', marginTop: '4px' }}>
                       <Zap size={8} style={{ marginRight: '2px' }} />{msg.latency}ms
                     </span>
                   )}
@@ -1163,7 +1163,7 @@ export default function AIEmployees() {
           </div>
 
           {/* Chat input */}
-          <div style={{ padding: '10px 14px', borderTop: '1px solid #1e1e30' }}>
+          <div style={{ padding: '10px 14px', borderTop: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', gap: '6px' }}>
               <input
                 type="text" placeholder="Type a message..."
@@ -1182,7 +1182,7 @@ export default function AIEmployees() {
                 {sending ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={14} />}
               </motion.button>
             </div>
-            <p style={{ fontSize: '9px', color: '#33334a', marginTop: '6px', textAlign: 'center' }}>
+            <p style={{ fontSize: '9px', color: 'var(--text-dim)', marginTop: '6px', textAlign: 'center' }}>
               {callActive ? 'Messages appear in real-time from STT (you) & TTS (AI)' : 'Start a call to begin chatting'}
             </p>
           </div>

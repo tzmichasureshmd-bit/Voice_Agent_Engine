@@ -275,26 +275,6 @@ export default function VoiceLab() {
       mediaRecorderRef.current = recorder; recorder.start(); setListening(true)
     } catch { setSttText('❌ Mic access denied.'); setListening(false) }
   }
-  const startDeepgramSTT = async () => {
-    try {
-      const stream   = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
-      audioChunksRef.current = []
-      recorder.ondataavailable = e => { if (e.data.size > 0) audioChunksRef.current.push(e.data) }
-      recorder.onstop = async () => {
-        stream.getTracks().forEach(t => t.stop())
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-        const fd   = new FormData(); fd.append('file', blob, 'audio.webm')
-        setInterim('Transcribing...')
-        try {
-          const r = await api.post('/voicelab/stt/deepgram', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-          if (r.data.transcript) setSttText(p => p + r.data.transcript + ' ')
-        } catch { setSttText(p => p + '[Transcription failed] ') }
-        setInterim(''); setListening(false)
-      }
-      mediaRecorderRef.current = recorder; recorder.start(); setListening(true)
-    } catch { setSttText('❌ Mic access denied.'); setListening(false) }
-  }
   const startBrowserSTT = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
     if (!SR) { setSttText('❌ Use Chrome for mic support.'); return }
@@ -657,7 +637,7 @@ export default function VoiceLab() {
       </div>
 
       {/* Tab Bar */}
-      <div className="vl-tab-bar" style={{ background:'#0e0e1a', border:'1px solid #1e1e30' }}>
+      <div className="vl-tab-bar" style={{ background:'var(--bg-card)', border:'1px solid var(--border)' }}>
         {TABS.map(t => (
           <motion.button key={t.id} onClick={() => setActiveTab(t.id)}
             className={`vl-tab${activeTab === t.id ? ' active' : ''}`}
@@ -674,7 +654,7 @@ export default function VoiceLab() {
       </div>
 
       {/* Panel */}
-      <div className="vl-panel-wrap" style={{ background:'#0e0e1a', border:'1px solid #1e1e30', boxShadow:'0 0 0 1px rgba(124,58,237,0.04)' }}>
+      <div className="vl-panel-wrap" style={{ background:'var(--bg-card)', border:'1px solid var(--border)', boxShadow:'0 0 0 1px rgba(124,58,237,0.04)' }}>
         <AnimatePresence mode="wait" initial={false}>
 
           {/* ════ TTS PANEL — two columns ════ */}

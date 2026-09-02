@@ -137,15 +137,15 @@ export default function CallSimulator({ clientData }) {
   return (
     <div>
       <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} style={{ marginBottom:'20px' }}>
-        <h1 style={{ fontSize:'26px', fontWeight:'900', color:'#f0f0f8', letterSpacing:'-0.5px' }}>Call Simulator</h1>
-        <p style={{ fontSize:'13px', color:'#55556a', marginTop:'4px' }}>Test AI conversations without real calls</p>
+        <h1 style={{ fontSize:'26px', fontWeight:'900', color:'var(--text-primary)', letterSpacing:'-0.5px' }}>Call Simulator</h1>
+        <p style={{ fontSize:'13px', color:'var(--text-muted)', marginTop:'4px' }}>Test AI conversations without real calls</p>
       </motion.div>
 
       <div style={{ display:'grid', gridTemplateColumns:'280px 1fr', gap:'12px' }}>
 
         {/* ── Left Panel ── */}
         <div style={{
-          background:'#0e0e1a', border:'1px solid #1e1e30', borderRadius:'18px',
+          background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:'18px',
           padding:'20px', display:'flex', flexDirection:'column',
           height:'calc(100vh - 120px)', overflow:'auto',
           boxShadow:'0 0 0 1px rgba(124,58,237,0.04)',
@@ -154,24 +154,24 @@ export default function CallSimulator({ clientData }) {
 
           <div style={{ display:'flex', flexDirection:'column', gap:'12px', marginBottom:'16px' }}>
             <div>
-              <label style={{ fontSize:'11px', color:'#33334a', marginBottom:'6px', display:'block', fontWeight:'600', textTransform:'uppercase', letterSpacing:'0.5px' }}>Select Lead</label>
+              <label style={{ fontSize:'11px', color:'var(--text-dim)', marginBottom:'6px', display:'block', fontWeight:'600', textTransform:'uppercase', letterSpacing:'0.5px' }}>Select Lead</label>
               <div style={{ position:'relative' }}>
                 <input type="text" placeholder="Search name or phone…" value={leadSearch}
                   onChange={e => { setLeadSearch(e.target.value); setShowSuggestions(true); setLeadId('') }}
                   onFocus={() => setShowSuggestions(true)}
                   className="input" disabled={callActive} style={{ fontSize:'12px' }}/>
                 {showSuggestions && leadSearch && !callActive && (
-                  <div style={{ position:'absolute', top:'100%', left:0, right:0, marginTop:'4px', background:'#0e0e1a', border:'1px solid rgba(124,58,237,0.2)', borderRadius:'12px', maxHeight:'160px', overflowY:'auto', zIndex:10, boxShadow:'0 8px 24px rgba(0,0,0,0.5)' }}>
+                  <div style={{ position:'absolute', top:'100%', left:0, right:0, marginTop:'4px', background:'var(--bg-card)', border:'1px solid rgba(124,58,237,0.2)', borderRadius:'12px', maxHeight:'160px', overflowY:'auto', zIndex:10, boxShadow:'0 8px 24px rgba(0,0,0,0.5)' }}>
                     {filteredLeads.length > 0 ? filteredLeads.map(lead => (
                       <div key={lead.id} onClick={() => selectLead(lead)}
-                        style={{ padding:'10px 14px', cursor:'pointer', borderBottom:'1px solid #1e1e30', fontSize:'12px', transition:'background 0.12s' }}
+                        style={{ padding:'10px 14px', cursor:'pointer', borderBottom:'1px solid var(--border)', fontSize:'12px', transition:'background 0.12s' }}
                         onMouseEnter={e => e.currentTarget.style.background='rgba(124,58,237,0.08)'}
                         onMouseLeave={e => e.currentTarget.style.background='transparent'}>
-                        <p style={{ fontWeight:'600', color:'#f0f0f8' }}>{lead.name}</p>
-                        <p style={{ fontSize:'11px', color:'#33334a', marginTop:'1px' }}>{lead.phone}</p>
+                        <p style={{ fontWeight:'600', color:'var(--text-primary)' }}>{lead.name}</p>
+                        <p style={{ fontSize:'11px', color:'var(--text-dim)', marginTop:'1px' }}>{lead.phone}</p>
                       </div>
                     )) : (
-                      <div style={{ padding:'12px', fontSize:'11px', color:'#33334a', textAlign:'center' }}>No leads found</div>
+                      <div style={{ padding:'12px', fontSize:'11px', color:'var(--text-dim)', textAlign:'center' }}>No leads found</div>
                     )}
                   </div>
                 )}
@@ -179,7 +179,7 @@ export default function CallSimulator({ clientData }) {
             </div>
 
             <div>
-              <label style={{ fontSize:'11px', color:'#33334a', marginBottom:'6px', display:'block', fontWeight:'600', textTransform:'uppercase', letterSpacing:'0.5px' }}>Product Info</label>
+              <label style={{ fontSize:'11px', color:'var(--text-dim)', marginBottom:'6px', display:'block', fontWeight:'600', textTransform:'uppercase', letterSpacing:'0.5px' }}>Product Info</label>
               <textarea placeholder="What should AI pitch?" value={product} onChange={e => setProduct(e.target.value)}
                 className="input" style={{ height:'80px', resize:'none', fontSize:'12px' }} disabled={callActive}/>
             </div>
@@ -224,13 +224,13 @@ export default function CallSimulator({ clientData }) {
                   { label:'Score',     value: `${analysis.analysis?.score}/10`, bold:true },
                 ].map(row => (
                   <div key={row.label} style={{ display:'flex', justifyContent:'space-between', fontSize:'12px', marginBottom:'6px' }}>
-                    <span style={{ color:'#33334a' }}>{row.label}</span>
-                    <span style={{ color:'#f0f0f8', fontWeight: row.bold?'800':'500', textTransform: row.capitalize?'capitalize':'none' }}>{row.value}</span>
+                    <span style={{ color:'var(--text-dim)' }}>{row.label}</span>
+                    <span style={{ color:'var(--text-primary)', fontWeight: row.bold?'800':'500', textTransform: row.capitalize?'capitalize':'none' }}>{row.value}</span>
                   </div>
                 ))}
                 {analysis.analysis?.category && (
                   <div style={{ display:'flex', justifyContent:'space-between', fontSize:'12px', alignItems:'center' }}>
-                    <span style={{ color:'#33334a' }}>Category</span>
+                    <span style={{ color:'var(--text-dim)' }}>Category</span>
                     <span style={{
                       fontSize:'9px', fontWeight:'800', padding:'3px 9px', borderRadius:'999px', textTransform:'uppercase',
                       background:`rgba(${SCORE_GLOW[analysis.analysis.category]||'124,58,237'},0.12)`,
@@ -246,22 +246,22 @@ export default function CallSimulator({ clientData }) {
 
         {/* ── Right — Chat ── */}
         <div style={{
-          background:'#0e0e1a', border:'1px solid #1e1e30', borderRadius:'18px',
+          background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:'18px',
           height:'calc(100vh - 120px)', display:'flex', flexDirection:'column', overflow:'hidden',
           boxShadow:'0 0 0 1px rgba(124,58,237,0.04)',
         }}>
           {/* Chat header */}
-          <div style={{ padding:'16px 20px', borderBottom:'1px solid #1e1e30', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--border)', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
             <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
               {callActive ? (
                 <><div style={{ width:8, height:8, borderRadius:'50%', background:'#10b981', boxShadow:'0 0 8px #10b981', animation:'pulse 2s infinite' }}/><span style={{ fontSize:'12px', fontWeight:'600', color:'#10b981' }}>Call Active</span></>
               ) : (
-                <><div style={{ width:8, height:8, borderRadius:'50%', background:'#1e1e30' }}/><span style={{ fontSize:'12px', color:'#33334a' }}>No Active Call</span></>
+                <><div style={{ width:8, height:8, borderRadius:'50%', background:'var(--border)' }}/><span style={{ fontSize:'12px', color:'var(--text-dim)' }}>No Active Call</span></>
               )}
             </div>
             <motion.button whileTap={{ scale:0.95 }}
               onClick={() => { setVoiceOn(!voiceOn); if (voiceOn) window.speechSynthesis.cancel() }}
-              style={{ background:'transparent', border:`1px solid ${voiceOn?'rgba(124,58,237,0.3)':'#1e1e30'}`, borderRadius:'999px', padding:'6px 12px', cursor:'pointer', display:'flex', alignItems:'center', gap:'5px', fontSize:'11px', fontWeight:'600', color: voiceOn?'#a78bfa':'#33334a', transition:'all 0.15s' }}>
+              style={{ background:'transparent', border:`1px solid ${voiceOn?'rgba(124,58,237,0.3)':'var(--border)'}`, borderRadius:'999px', padding:'6px 12px', cursor:'pointer', display:'flex', alignItems:'center', gap:'5px', fontSize:'11px', fontWeight:'600', color: voiceOn?'#a78bfa':'var(--text-dim)', transition:'all 0.15s' }}>
               {voiceOn ? <Volume2 size={13}/> : <VolumeX size={13}/>} {voiceOn?'Voice On':'Voice Off'}
             </motion.button>
           </div>
@@ -274,7 +274,7 @@ export default function CallSimulator({ clientData }) {
                   <div style={{ width:56, height:56, borderRadius:'18px', background:'rgba(124,58,237,0.1)', border:'1px solid rgba(124,58,237,0.2)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
                     <Phone size={22} color="#a78bfa"/>
                   </div>
-                  <p style={{ fontSize:'13px', color:'#33334a', fontWeight:'600' }}>Start a call to begin</p>
+                  <p style={{ fontSize:'13px', color:'var(--text-dim)', fontWeight:'600' }}>Start a call to begin</p>
                 </div>
               </div>
             )}
@@ -289,9 +289,9 @@ export default function CallSimulator({ clientData }) {
                 <div style={{
                   maxWidth:'72%', padding:'10px 14px', borderRadius: msg.role==='human'?'14px 14px 4px 14px':'14px 14px 14px 4px',
                   fontSize:'13px', lineHeight:'1.55',
-                  background: msg.role==='ai' ? 'rgba(124,58,237,0.1)' : msg.role==='human' ? '#13131f' : 'rgba(239,68,68,0.08)',
-                  border: msg.role==='ai' ? '1px solid rgba(124,58,237,0.2)' : msg.role==='human' ? '1px solid #1e1e30' : '1px solid rgba(239,68,68,0.2)',
-                  color: msg.role==='system' ? '#f87171' : '#f0f0f8',
+                  background: msg.role==='ai' ? 'rgba(124,58,237,0.1)' : msg.role==='human' ? 'var(--bg-input)' : 'rgba(239,68,68,0.08)',
+                  border: msg.role==='ai' ? '1px solid rgba(124,58,237,0.2)' : msg.role==='human' ? '1px solid var(--border)' : '1px solid rgba(239,68,68,0.2)',
+                  color: msg.role==='system' ? '#f87171' : 'var(--text-primary)',
                 }}>{msg.content}</div>
                 {msg.role === 'human' && (
                   <div style={{ width:30, height:30, borderRadius:'9px', background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.2)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
@@ -315,9 +315,9 @@ export default function CallSimulator({ clientData }) {
           </div>
 
           {/* Input */}
-          <div style={{ padding:'16px 20px', borderTop:'1px solid #1e1e30', flexShrink:0, background:'#0e0e1a' }}>
+          <div style={{ padding:'16px 20px', borderTop:'1px solid var(--border)', flexShrink:0, background:'var(--bg-card)' }}>
             {callActive && (
-              <p style={{ fontSize:'11px', color: micListening?'#ef4444':'#33334a', marginBottom:'8px', textAlign:'center' }}>
+              <p style={{ fontSize:'11px', color: micListening?'#ef4444':'var(--text-dim)', marginBottom:'8px', textAlign:'center' }}>
                 {micListening ? '🔴 Listening — tap mic to stop' : 'Type or tap mic to speak as the lead'}
               </p>
             )}

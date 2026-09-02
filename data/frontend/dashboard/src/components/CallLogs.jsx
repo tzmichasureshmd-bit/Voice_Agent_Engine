@@ -90,7 +90,7 @@ function CallIntelligence({ call }) {
     immediate:    { color: '#f87171', bg: 'rgba(248,113,113,0.1)', label: '🚨 Immediate' },
     within_24h:   { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  label: '⚡ Within 24h' },
     this_week:    { color: '#06b6d4', bg: 'rgba(6,182,212,0.1)',   label: '📅 This Week' },
-    low_priority: { color: '#55556a', bg: 'rgba(85,85,106,0.1)',   label: '🔵 Low Priority' },
+    low_priority: { color: 'var(--text-muted)', bg: 'rgba(85,85,106,0.1)',   label: '🔵 Low Priority' },
   }
   const emotionEmoji = {
     excited: '🤩', positive: '😊', neutral: '😐',
@@ -119,17 +119,17 @@ function CallIntelligence({ call }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '10px' }}>
         {/* Intent */}
         <div style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.15)', borderRadius: '10px', padding: '10px' }}>
-          <p style={{ fontSize: '9px', color: '#55556a', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Intent</p>
+          <p style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Intent</p>
           <p style={{ fontSize: '12px', fontWeight: '700', color: '#a78bfa' }}>{intentLabel[call.intent] || call.intent || '—'}</p>
         </div>
         {/* Emotion */}
         <div style={{ background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.15)', borderRadius: '10px', padding: '10px' }}>
-          <p style={{ fontSize: '9px', color: '#55556a', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Emotion</p>
+          <p style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Emotion</p>
           <p style={{ fontSize: '12px', fontWeight: '700', color: '#06b6d4' }}>{emotionEmoji[call.emotion] || ''} {call.emotion || '—'}</p>
         </div>
         {/* Follow-up urgency */}
         <div style={{ background: urgency.bg, border: `1px solid ${urgency.color}33`, borderRadius: '10px', padding: '10px' }}>
-          <p style={{ fontSize: '9px', color: '#55556a', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Follow-up</p>
+          <p style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Follow-up</p>
           <p style={{ fontSize: '11px', fontWeight: '700', color: urgency.color }}>{urgency.label}</p>
         </div>
       </div>
@@ -144,7 +144,7 @@ function CallIntelligence({ call }) {
           {call.buying_signals.map((s, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
               <CheckCircle2 size={10} color="#10b981" />
-              <span style={{ fontSize: '11px', color: '#a0a0b8' }}>{s}</span>
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{s}</span>
             </div>
           ))}
         </div>
@@ -160,7 +160,7 @@ function CallIntelligence({ call }) {
           {call.objections.map((o, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
               <span style={{ fontSize: '10px', color: '#fbbf24' }}>⚠</span>
-              <span style={{ fontSize: '11px', color: '#a0a0b8' }}>{o}</span>
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{o}</span>
             </div>
           ))}
         </div>
@@ -180,8 +180,8 @@ function CallIntelligence({ call }) {
         <div style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: '10px', padding: '10px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
           <Target size={12} color="#a78bfa" style={{ flexShrink: 0, marginTop: '1px' }} />
           <div>
-            <p style={{ fontSize: '9px', color: '#55556a', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Recommended Action</p>
-            <p style={{ fontSize: '12px', color: '#f0f0f8', fontWeight: '600' }}>{call.recommended_action}</p>
+            <p style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Recommended Action</p>
+            <p style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: '600' }}>{call.recommended_action}</p>
           </div>
         </div>
       )}
@@ -294,7 +294,7 @@ function WhatsAppBtn({ call }) {
           </button>
         ))}
         {numbers.length === 0 && (!call.phone || call.phone === 'simulated') && (
-          <p style={{ fontSize: '11px', color: '#33334a' }}>Add numbers in Settings → WhatsApp Auto-Summary</p>
+          <p style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Add numbers in Settings → WhatsApp Auto-Summary</p>
         )}
       </div>
       {sent && <p style={{ fontSize: '10px', color: '#25d366', marginTop: '4px' }}>✅ Sent to {sent}!</p>}
@@ -309,7 +309,7 @@ function ActiveCallCard({ call, onTransfer }) {
 
   const statusColor = {
     ringing: '#fbbf24', active: '#4ade80', transfer_pending: '#a78bfa', demo: '#60a5fa',
-  }[call.status] || '#55556a'
+  }[call.status] || 'var(--text-muted)'
 
   const handleTransfer = async () => {
     if (!humanNum.trim()) return
@@ -323,7 +323,7 @@ function ActiveCallCard({ call, onTransfer }) {
 
   return (
     <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-      style={{ background: '#0e0e1a', border: '1px solid rgba(74,222,128,0.25)', borderRadius: '14px', padding: '16px 20px', marginBottom: '10px', boxShadow: '0 0 20px rgba(74,222,128,0.06)' }}>
+      style={{ background: 'var(--bg-card)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: '14px', padding: '16px 20px', marginBottom: '10px', boxShadow: '0 0 20px rgba(74,222,128,0.06)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ position: 'relative', width: 10, height: 10 }}>
@@ -332,10 +332,10 @@ function ActiveCallCard({ call, onTransfer }) {
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: statusColor }} />
           </div>
           <div>
-            <p style={{ fontSize: '14px', fontWeight: '700', color: '#f0f0f8' }}>
+            <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>
               {call.direction === 'inbound' ? '📲 Incoming' : '📞 Outgoing'} — {call.call_id.split('_').slice(-1)[0]}
             </p>
-            <p style={{ fontSize: '11px', color: '#55556a', marginTop: '2px' }}>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
               {call.transcript_turns} turns · Score {call.score}/10 · {call.emotion} · {call.intent || 'qualifying'}
             </p>
           </div>
@@ -345,7 +345,7 @@ function ActiveCallCard({ call, onTransfer }) {
         </span>
       </div>
       {(call.score >= 6 || call.transfer_requested) && (
-        <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #1e1e30', display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border)', display: 'flex', gap: '8px', alignItems: 'center' }}>
           <ArrowRightLeft size={13} color="#a78bfa" />
           <span style={{ fontSize: '12px', color: '#a78bfa', fontWeight: '600' }}>
             {call.transfer_requested ? '✅ Transfer queued' : '🔥 HOT lead — Transfer to human?'}
@@ -353,7 +353,7 @@ function ActiveCallCard({ call, onTransfer }) {
           {!call.transfer_requested && (
             <>
               <input value={humanNum} onChange={e => setHumanNum(e.target.value)} placeholder="Human agent number"
-                style={{ flex: 1, background: '#181828', border: '1px solid #2b3447', borderRadius: '8px', padding: '5px 10px', fontSize: '12px', color: '#f0f0f8', outline: 'none' }} />
+                style={{ flex: 1, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: '8px', padding: '5px 10px', fontSize: '12px', color: 'var(--text-primary)', outline: 'none' }} />
               <motion.button whileTap={{ scale: 0.95 }} onClick={handleTransfer} disabled={!humanNum.trim() || transferring}
                 style={{ padding: '5px 14px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#a78bfa,#7c3aed)', color: '#fff', fontSize: '12px', fontWeight: '700', opacity: !humanNum.trim() ? 0.5 : 1 }}>
                 <PhoneForwarded size={12} style={{ display: 'inline', marginRight: 4 }} />
@@ -410,8 +410,8 @@ export default function CallLogs() {
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
         style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
-          <h1 style={{ fontSize: '26px', fontWeight: '900', color: '#f0f0f8', letterSpacing: '-0.5px' }}>Call Activity</h1>
-          <p style={{ fontSize: '13px', color: '#55556a', marginTop: '4px' }}>
+          <h1 style={{ fontSize: '26px', fontWeight: '900', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>Call Activity</h1>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
             {activeCalls.length > 0 && <span style={{ color: '#4ade80', fontWeight: 700 }}>{activeCalls.length} live · </span>}
             {calls.length} total calls
             {localStorage.getItem('s_wa_auto') === 'true' && (
@@ -447,10 +447,10 @@ export default function CallLogs() {
       </AnimatePresence>
 
       {calls.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '80px 0', background: '#0e0e1a', border: '1px solid #1e1e30', borderRadius: '18px' }}>
-          <Phone size={28} style={{ color: '#1e1e30', margin: '0 auto 14px' }} />
-          <p style={{ fontSize: '14px', color: '#33334a', fontWeight: '600' }}>No calls yet</p>
-          <p style={{ fontSize: '12px', color: '#1e1e30', marginTop: '4px' }}>Use the Simulator or trigger a real call from Leads</p>
+        <div style={{ textAlign: 'center', padding: '80px 0', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px' }}>
+          <Phone size={28} style={{ color: 'var(--border)', margin: '0 auto 14px' }} />
+          <p style={{ fontSize: '14px', color: 'var(--text-dim)', fontWeight: '600' }}>No calls yet</p>
+          <p style={{ fontSize: '12px', color: 'var(--text-dim)', marginTop: '4px' }}>Use the Simulator or trigger a real call from Leads</p>
         </div>
       ) : (
         <div style={{ position: 'relative', paddingLeft: '28px' }}>
@@ -465,7 +465,7 @@ export default function CallLogs() {
                 style={{ position: 'relative', marginBottom: '8px' }}>
                 <div style={{ position: 'absolute', left: '-24px', top: '20px', width: '10px', height: '10px', borderRadius: '50%', background: c, boxShadow: `0 0 10px rgba(${g},0.6)`, border: '2px solid #05050a' }} />
                 <div onClick={() => setExpanded(isOpen ? null : call.id)}
-                  style={{ background: '#0e0e1a', border: `1px solid rgba(${g},0.15)`, borderRadius: '14px', padding: '16px 20px', cursor: 'pointer', transition: 'all 0.2s' }}
+                  style={{ background: 'var(--bg-card)', border: `1px solid rgba(${g},0.15)`, borderRadius: '14px', padding: '16px 20px', cursor: 'pointer', transition: 'all 0.2s' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = `rgba(${g},0.35)`; e.currentTarget.style.background = 'var(--bg-card-hover)' }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = `rgba(${g},0.15)`; e.currentTarget.style.background = 'var(--bg-card)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
@@ -474,15 +474,15 @@ export default function CallLogs() {
                         {call.lead_name?.[0] || '?'}
                       </div>
                       <div style={{ minWidth: 0 }}>
-                        <p style={{ fontSize: '14px', fontWeight: '700', color: '#f0f0f8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {call.direction === 'inbound' ? '📲 ' : '📞 '}{call.lead_name}
                           {call.call_status === 'transferred' && (
                             <span style={{ marginLeft: 8, fontSize: '10px', color: '#a78bfa', background: 'rgba(167,139,250,0.1)', padding: '2px 7px', borderRadius: '999px', border: '1px solid rgba(167,139,250,0.25)' }}>👤 Transferred</span>
                           )}
                         </p>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '3px' }}>
-                          <span style={{ fontSize: '11px', color: '#33334a', display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={10} /> {call.duration_seconds}s</span>
-                          <span style={{ fontSize: '11px', color: '#33334a', textTransform: 'capitalize' }}>{call.sentiment}</span>
+                          <span style={{ fontSize: '11px', color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={10} /> {call.duration_seconds}s</span>
+                          <span style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'capitalize' }}>{call.sentiment}</span>
                         </div>
                       </div>
                     </div>
@@ -509,8 +509,8 @@ export default function CallLogs() {
                       <FollowUpActions call={call} />
                       <WhatsAppBtn call={call} />
                       {call.recording_url && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#181828', borderRadius: '10px', padding: '10px 14px', border: '1px solid #2b3447' }}>
-                          <span style={{ fontSize: '11px', color: '#55556a', fontWeight: '600' }}>🎙️ Recording</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg-input)', borderRadius: '10px', padding: '10px 14px', border: '1px solid var(--border)' }}>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>🎙️ Recording</span>
                           <audio controls src={call.recording_url} style={{ flex: 1, height: '28px', accentColor: '#a78bfa' }} />
                           <a href={call.recording_url} download style={{ color: '#a78bfa', fontSize: '11px', textDecoration: 'none', padding: '4px 10px', border: '1px solid rgba(167,139,250,0.3)', borderRadius: '6px', whiteSpace: 'nowrap' }}>⬇ Save</a>
                         </div>

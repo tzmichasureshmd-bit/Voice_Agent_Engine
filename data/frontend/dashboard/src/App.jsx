@@ -9,6 +9,7 @@ import AppShell from './components/AppShell'
 import Dashboard from './components/Dashboard'
 import Leads from './components/Leads'
 import CallSimulator from './components/CallSimulator'
+import SalesMonitor from './components/SalesMonitor'
 import Campaigns from './components/Campaigns'
 import CallLogs from './components/CallLogs'
 import Profile from './components/Profile'
@@ -26,12 +27,13 @@ import ClientAdmin from './components/ClientAdmin'
 import WhatsAppPage from './components/WhatsAppPage'
 import SMSPage from './components/SMSPage'
 import {
-  LayoutDashboard, Bot, Users, AudioLines, PhoneCall, Activity
+  LayoutDashboard, Bot, Users, AudioLines, PhoneCall, Activity, LineChart
 } from 'lucide-react'
 
 // PRIMARY nav — always visible, never changes
 const NAV_ITEMS = [
   { id: 'dashboard',     icon: LayoutDashboard, label: 'Overview'      },
+  { id: 'monitor',       icon: LineChart,       label: 'Sales Monitor' },
   { id: 'ai-employees',  icon: Bot,             label: 'Assistants'    },
   { id: 'leads',         icon: Users,           label: 'Leads'         },
   { id: 'voicelab',      icon: AudioLines,      label: 'Voice Lab'     },
@@ -51,13 +53,77 @@ function PlaceholderPage({ title, desc }) {
   )
 }
 
+// ── Clean URL slug ↔ internal tab id mapping ──
+// URL shows the friendly slug (left), code uses the internal tab id (right)
+const SLUG_TO_TAB = {
+  'home':         'dashboard',
+  'monitor':      'monitor',
+  'assistants':   'ai-employees',
+  'leads':        'leads',
+  'voice':        'voicelab',
+  'simulator':    'calls',
+  'activity':     'logs',
+  'campaigns':    'campaigns',
+  'analytics':    'analytics',
+  'team':         'team',
+  'profile':      'profile',
+  'knowledge':    'knowledge',
+  'appointments': 'appointments',
+  'billing':      'billing',
+  'callflows':    'callflows',
+  'webdialer':    'webdialer',
+  'livecalls':    'livecalls',
+  'incomingbot':  'incomingbot',
+  'widget':       'widget',
+  'whatsapp':     'whatsapp',
+  'sms':          'sms',
+  'workflows':    'workflows',
+  'integrations': 'integrations',
+  'api':          'api',
+  'admin':        'clientadmin',
+  'settings':     'settings',
+}
+
+// Reverse map: internal tab id → clean slug
+const TAB_TO_SLUG = Object.fromEntries(Object.entries(SLUG_TO_TAB).map(([slug, tab]) => [tab, slug]))
+
+// Read the current tab from the URL path (e.g. /voice → 'voicelab')
+function tabFromURL() {
+  const slug = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase()
+  return SLUG_TO_TAB[slug] || 'dashboard'
+}
+
 function App() {
-  const [activeTab, setActiveTab] = useState('dashboard')
+  const [activeTab, setActiveTabState] = useState(tabFromURL())
   const [loggedIn, setLoggedIn]   = useState(!!localStorage.getItem('client_id'))
   const [clientData, setClientData] = useState(() => {
     try { return JSON.parse(localStorage.getItem('client_data') || '{}') } catch { return {} }
   })
   const [showAdmin, setShowAdmin] = useState(false)
+
+  // Change tab AND update the browser URL to the clean slug (e.g. voicelab → /voice)
+  const setActiveTab = (tab) => {
+    setActiveTabState(tab)
+    const slug = TAB_TO_SLUG[tab] || 'home'
+    const newPath = `/${slug}`
+    if (window.location.pathname !== newPath) {
+      window.history.pushState({ tab }, '', newPath)
+    }
+  }
+
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    const onPop = () => setActiveTabState(tabFromURL())
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+
+  // On first load, if URL is bare "/", normalise it to "/home"
+  useEffect(() => {
+    if (window.location.pathname === '/' || window.location.pathname === '') {
+      window.history.replaceState({ tab: 'dashboard' }, '', '/home')
+    }
+  }, [])
 
   // Handle Google redirect result (mobile / popup-blocked fallback)
   useEffect(() => {
@@ -110,6 +176,7 @@ function App() {
     )
     switch (activeTab) {
       case 'dashboard':    return <Dashboard />
+      case 'monitor':      return <SalesMonitor />
       case 'ai-employees': return <AIEmployees />
       case 'leads':        return <Leads />
       case 'logs':         return <CallLogs />

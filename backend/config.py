@@ -41,10 +41,12 @@ if _raw_db_url.startswith("postgresql://"):
         # Decode %40 etc, then re-encode cleanly
         from urllib.parse import unquote
         decoded_pass = unquote(raw_pass)
+        _port = port or ('6543' if 'pooler.supabase.com' in host else '5432')
+        _extra = "?sslmode=require"
         _raw_db_url = (
             f"postgresql://{user}:{quote_plus(decoded_pass)}"
-            f"@{host}:{port or 5432}{path or '/postgres'}"
-            f"?sslmode=require"
+            f"@{host}:{_port}{path or '/postgres'}"
+            f"{_extra}"
         )
 DATABASE_URL = _raw_db_url
 

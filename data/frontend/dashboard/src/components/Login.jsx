@@ -1,11 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import { Lock, UserPlus, Eye, EyeOff, Building, Users, Zap, ArrowRight } from 'lucide-react'
-import axios from 'axios'
+import api from '../api'
 import { signInWithGoogle } from '../firebase'
 import voiceLogo from '../assets/voice_logo.jpeg'
-
-const API = window.location.hostname === 'localhost' ? 'http://localhost:8000' : '/api'
 
 /* ── Floating orb ── */
 function Orb({ style }) {
@@ -48,7 +46,7 @@ export default function Login({ onLogin, onAdmin }) {
     if (!email || !password) return setError('Fill all fields')
     setLoading(true)
     try {
-      const res = await axios.post(`${API}/auth/login`, { email, password })
+      const res = await api.post('/auth/login', { email, password })
       localStorage.setItem('client_id',   res.data.client_id)
       localStorage.setItem('client_data', JSON.stringify(res.data))
       localStorage.setItem('user_role',   'client_admin')
@@ -61,7 +59,7 @@ export default function Login({ onLogin, onAdmin }) {
     if (!email || !password) return setError('Fill all fields')
     setLoading(true)
     try {
-      const res = await axios.post(`${API}/auth/team-login`, { email, password })
+      const res = await api.post('/auth/team-login', { email, password })
       localStorage.setItem('client_id',        res.data.client_id)
       localStorage.setItem('client_data',      JSON.stringify(res.data))
       localStorage.setItem('user_role',        res.data.role)
@@ -76,7 +74,7 @@ export default function Login({ onLogin, onAdmin }) {
     try {
       const result = await signInWithGoogle()
       if (!result) return // redirect flow — page will reload, App.jsx handles it
-      const res = await axios.post(`${API}/auth/google`, { id_token: result.idToken })
+      const res = await api.post('/auth/google', { id_token: result.idToken })
       localStorage.setItem('client_id',   res.data.client_id)
       localStorage.setItem('client_data', JSON.stringify(res.data))
       localStorage.setItem('user_role',   'client_admin')
@@ -91,7 +89,7 @@ export default function Login({ onLogin, onAdmin }) {
     if (reg.password.length < 6) return setError('Password must be at least 6 characters')
     setLoading(true)
     try {
-      await axios.post(`${API}/auth/register`, reg)
+      await api.post('/auth/register', reg)
       setMode('login'); setEmail(reg.email)
       alert('Registration successful! Please login.')
     } catch (err) { setError(err.response?.data?.detail || 'Registration failed') }

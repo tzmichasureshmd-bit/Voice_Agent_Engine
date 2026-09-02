@@ -10,12 +10,15 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [activeEmployees, setActiveEmployees] = useState(0)
   const [timePeriod, setTimePeriod] = useState(7)
+  const [walletBalance, setWalletBalance] = useState('—')
 
   useEffect(() => {
+    const clientId = localStorage.getItem('client_id')
     Promise.all([
       api.get('/dashboard/stats').then(r => setStats(r.data)).catch(() => {}),
       api.get('/calls').then(r => setCalls(r.data.calls || [])).catch(() => {}),
       api.get('/ai-employees').then(r => setActiveEmployees((r.data.employees || []).filter(e => e.status === 'active').length)).catch(() => {}),
+      api.get(`/billing/wallet?client_id=${clientId}`).then(r => setWalletBalance(`₹${(r.data.balance_inr || 0).toLocaleString('en-IN')}`)).catch(() => setWalletBalance('₹0')),
     ]).finally(() => setLoading(false))
   }, [])
 
@@ -45,7 +48,7 @@ export default function Dashboard() {
     { label: 'TOTAL CALLS',    value: stats.total_calls,  icon: Phone,      color: '#a78bfa', glow: '124,58,237', sub: `Last ${timePeriod} days` },
     { label: 'CONNECT RATE',   value: connectRate + '%',  icon: TrendingUp, color: '#06b6d4', glow: '6,182,212',  sub: `${connected} connected` },
     { label: 'MINUTES USED',   value: totalMinutes,       icon: Clock,      color: '#10b981', glow: '16,185,129', sub: `Avg ${avgDur}s per call` },
-    { label: 'WALLET BALANCE', value: '$4,500',            icon: Activity,   color: '#fbbf24', glow: '251,191,36', sub: '$0 spent in 7d' },
+    { label: 'WALLET BALANCE', value: walletBalance,       icon: Activity,   color: '#fbbf24', glow: '251,191,36', sub: 'Prepaid wallet' },
   ]
 
   return (

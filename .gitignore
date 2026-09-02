@@ -2,14 +2,12 @@
 .env
 .env.*
 *.env
-serviceAccountKey.json
 deploy/.env.production
 tzmicha_platform/.env
 backend/.env
-
-# ── All Markdown docs ────────────────────────────────────
-*.md
-*.MD
+serviceAccountKey.json
+backend/serviceAccountKey.json
+*serviceAccountKey*.json
 
 # ── Databases / logs ─────────────────────────────────────
 *.db
@@ -28,6 +26,7 @@ backend/.env
 !data/frontend/dashboard/public/favicon.svg
 !data/frontend/dashboard/public/voice_logo.jpeg
 !data/frontend/dashboard/src/assets/voice_logo.jpeg
+!data/frontend/dashboard/src/assets/hero.png
 
 # ── Python cache ─────────────────────────────────────────
 __pycache__/
@@ -40,6 +39,9 @@ __pycache__/
 node_modules/
 dev-dist/
 dist/
+# Allow frontend dist — server needs built files
+!data/frontend/dashboard/dist/
+!data/frontend/dashboard/dist/**
 
 # ── Binaries / archives ──────────────────────────────────
 ngrok/

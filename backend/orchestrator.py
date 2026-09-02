@@ -23,6 +23,15 @@ QUALITY_MODEL = "llama-3.3-70b-versatile"
 
 _sessions: dict = {}
 
+# Voice enhancer — lazy init
+_enhancer = None
+def _get_enhancer():
+    global _enhancer
+    if _enhancer is None:
+        from services.voice_enhancer import VoiceEnhancer
+        _enhancer = VoiceEnhancer()
+    return _enhancer
+
 
 # ── Session ───────────────────────────────────────────────────────────────
 def create_session(session_id: str, agent_name: str, product_info: str,
@@ -376,6 +385,13 @@ def process_turn(session_id: str, user_text: str,
     session["topic"]["pending_questions"] = []
 
     tts_reply = clean_for_tts(reply)
+
+    # Voice enhancer — natural fillers, interruption handling
+    try:
+        enhancer = _get_enhancer()
+        tts_reply = enhancer.enhance(tts_reply, emotion=session["emotion"])
+    except Exception:
+        pass
 
     session["history"].append({"role": "user",      "content": user_text})
     session["history"].append({"role": "assistant",  "content": reply})

@@ -28,11 +28,8 @@ const PLANS = [
     features: ['5,000 min included', '₹2.20/min normal', '₹4.20/min premium'] },
 ]
 
-// ── Sample invoices (replaced by API when backend ready) ─────
-const SAMPLE_INV = [
-  { id: 1, invoice_no: 'INV-TZMICHA-0002', period: '2026-07', plan: 'Growth', amount_inr: 2499, status: 'paid',    issued_at: 'Jul 17, 2026' },
-  { id: 2, invoice_no: 'INV-TZMICHA-0001', period: '2026-06', plan: 'Growth', amount_inr: 2499, status: 'paid',    issued_at: 'Jun 30, 2026' },
-]
+// ── Sample invoices ─────────────────────────────────────────
+const SAMPLE_INV = []
 
 // ── Currency Picker ──────────────────────────────────────────
 function CurrencyPicker({ cur, setCur }) {
@@ -41,8 +38,8 @@ function CurrencyPicker({ cur, setCur }) {
     <div style={{ position: 'relative' }}>
       <button onClick={() => setOpen(p => !p)} style={{
         display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px',
-        borderRadius: '10px', cursor: 'pointer', background: '#0e0e1a',
-        border: '1px solid rgba(124,58,237,0.3)', color: '#f0f0f8', fontSize: '13px', fontWeight: '600',
+        borderRadius: '10px', cursor: 'pointer', background: 'var(--bg-card)',
+        border: '1px solid rgba(124,58,237,0.3)', color: 'var(--text-primary)', fontSize: '13px', fontWeight: '600',
       }}>
         {cur.flag} {cur.code} <ChevronDown size={12} />
       </button>
@@ -50,7 +47,7 @@ function CurrencyPicker({ cur, setCur }) {
         <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
           style={{
             position: 'absolute', top: '38px', right: 0, zIndex: 999,
-            background: '#0e0e1a', border: '1px solid rgba(124,58,237,0.2)',
+            background: 'var(--bg-card)', border: '1px solid rgba(124,58,237,0.2)',
             borderRadius: '12px', overflow: 'hidden', minWidth: '140px',
             boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
           }}>
@@ -59,10 +56,10 @@ function CurrencyPicker({ cur, setCur }) {
               display: 'flex', alignItems: 'center', gap: '8px', width: '100%',
               padding: '9px 14px', border: 'none', cursor: 'pointer',
               background: c.code === cur.code ? 'rgba(124,58,237,0.15)' : 'transparent',
-              color: c.code === cur.code ? '#a78bfa' : '#f0f0f8', fontSize: '13px', fontWeight: '500',
+              color: c.code === cur.code ? '#a78bfa' : 'var(--text-primary)', fontSize: '13px', fontWeight: '500',
             }}>
               {c.flag} {c.code}
-              <span style={{ marginLeft: 'auto', color: '#55556a', fontSize: '11px' }}>{c.symbol}</span>
+              <span style={{ marginLeft: 'auto', color: 'var(--text-muted)', fontSize: '11px' }}>{c.symbol}</span>
             </button>
           ))}
         </motion.div>
@@ -110,34 +107,34 @@ function AddMoneyModal({ cur, onClose, onSuccess }) {
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
         onClick={e => e.stopPropagation()}
         style={{
-          background: '#0e0e1a', border: '1px solid rgba(124,58,237,0.3)',
+          background: 'var(--bg-card)', border: '1px solid rgba(124,58,237,0.3)',
           borderRadius: '18px', padding: '28px', width: '360px',
           boxShadow: '0 24px 60px rgba(0,0,0,0.8)',
         }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <p style={{ fontSize: '16px', fontWeight: '800', color: '#f0f0f8' }}>Add Money to Wallet</p>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#55556a' }}>✕</button>
+          <p style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)' }}>Add Money to Wallet</p>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '8px', marginBottom: '16px' }}>
           {QUICK_AMOUNTS.map(a => (
             <button key={a} onClick={() => setAmount(a)} style={{
               padding: '8px 4px', borderRadius: '8px', border: 'none', cursor: 'pointer',
               fontSize: '12px', fontWeight: '700',
-              background: amount === a ? 'rgba(124,58,237,0.2)' : '#1e1e30',
-              color: amount === a ? '#a78bfa' : '#9999b3',
+              background: amount === a ? 'rgba(124,58,237,0.2)' : 'var(--border)',
+              color: amount === a ? '#a78bfa' : 'var(--text-secondary)',
               outline: amount === a ? '1px solid #7c3aed' : 'none',
             }}>₹{a.toLocaleString()}</button>
           ))}
         </div>
-        <p style={{ fontSize: '11px', color: '#55556a', marginBottom: '6px' }}>Custom amount (₹)</p>
+        <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Custom amount (₹)</p>
         <input type="number" value={amount} onChange={e => setAmount(+e.target.value)}
           style={{
             width: '100%', padding: '10px 14px', borderRadius: '10px', marginBottom: '8px',
-            background: '#0a0a14', border: '1px solid #1e1e30',
-            color: '#f0f0f8', fontSize: '16px', fontWeight: '700',
+            background: 'var(--bg-input)', border: '1px solid var(--border)',
+            color: 'var(--text-primary)', fontSize: '16px', fontWeight: '700',
           }} />
         {cur.code !== 'INR' && (
-          <p style={{ fontSize: '11px', color: '#55556a', marginBottom: '12px' }}>≈ {fmt(amount, cur)}</p>
+          <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '12px' }}>≈ {fmt(amount, cur)}</p>
         )}
         {msg && <p style={{ fontSize: '12px', marginBottom: '12px', color: msg.startsWith('✅') ? '#10b981' : '#f87171' }}>{msg}</p>}
         <button onClick={pay} disabled={loading} style={{
@@ -147,7 +144,7 @@ function AddMoneyModal({ cur, onClose, onSuccess }) {
         }}>
           {loading ? 'Processing...' : `Pay ${fmt(amount, cur)}`}
         </button>
-        <p style={{ fontSize: '10px', color: '#33334a', marginTop: '10px', textAlign: 'center' }}>
+        <p style={{ fontSize: '10px', color: 'var(--text-dim)', marginTop: '10px', textAlign: 'center' }}>
           Stripe · Razorpay · UPI — secure payment
         </p>
       </motion.div>
@@ -180,17 +177,17 @@ function WalletCard({ cur }) {
     <>
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
         style={{
-          background: '#0e0e1a', border: '1px solid rgba(124,58,237,0.2)',
+          background: 'var(--bg-card)', border: '1px solid rgba(124,58,237,0.2)',
           borderRadius: '16px', padding: '24px',
         }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
           <Wallet size={14} color='#a78bfa' />
-          <span style={{ fontSize: '11px', fontWeight: '700', color: '#55556a', textTransform: 'uppercase', letterSpacing: '1px' }}>Wallet Balance</span>
+          <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Wallet Balance</span>
         </div>
-        <p style={{ fontSize: '38px', fontWeight: '900', color: '#f0f0f8', marginBottom: '4px' }}>
+        <p style={{ fontSize: '38px', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '4px' }}>
           {balance === null ? '—' : fmt(balance, cur)}
         </p>
-        <p style={{ fontSize: '11px', color: '#55556a', marginBottom: '20px' }}>
+        <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '20px' }}>
           Prepaid — calling pauses automatically if balance runs out.
         </p>
         <button onClick={() => setShowModal(true)} style={{
@@ -211,15 +208,15 @@ function WalletCard({ cur }) {
 function PlansSection({ cur, currentPlan, setCurrentPlan }) {
   return (
     <div>
-      <p style={{ fontSize: '13px', fontWeight: '700', color: '#f0f0f8', marginBottom: '14px' }}>Plans</p>
+      <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '14px' }}>Plans</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px' }}>
         {PLANS.map((p, i) => {
           const active = currentPlan === p.id
           return (
             <motion.div key={p.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
               style={{
-                background: '#0e0e1a', borderRadius: '14px', padding: '20px', position: 'relative',
-                border: active ? '1px solid #7c3aed' : p.popular ? '1px solid rgba(124,58,237,0.3)' : '1px solid #1e1e30',
+                background: 'var(--bg-card)', borderRadius: '14px', padding: '20px', position: 'relative',
+                border: active ? '1px solid #7c3aed' : p.popular ? '1px solid rgba(124,58,237,0.3)' : '1px solid var(--border)',
               }}>
               {p.popular && (
                 <div style={{
@@ -228,22 +225,22 @@ function PlansSection({ cur, currentPlan, setCurrentPlan }) {
                   padding: '3px 12px', borderRadius: '20px', letterSpacing: '0.8px',
                 }}>POPULAR</div>
               )}
-              <p style={{ fontSize: '15px', fontWeight: '800', color: '#f0f0f8', marginBottom: '6px' }}>{p.name}</p>
-              <p style={{ fontSize: '28px', fontWeight: '900', color: p.popular ? '#a78bfa' : '#f0f0f8', marginBottom: '14px' }}>
+              <p style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '6px' }}>{p.name}</p>
+              <p style={{ fontSize: '28px', fontWeight: '900', color: p.popular ? '#a78bfa' : 'var(--text-primary)', marginBottom: '14px' }}>
                 {p.inr === 0 ? `${cur.symbol}0` : fmt(p.inr, cur)}
-                <span style={{ fontSize: '12px', color: '#55556a', fontWeight: '400' }}>/mo</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '400' }}>/mo</span>
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '7px', marginBottom: '18px' }}>
                 {p.features.map((f, fi) => (
-                  <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '12px', color: '#9999b3' }}>
+                  <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '12px', color: 'var(--text-secondary)' }}>
                     <Check size={11} color='#7c3aed' /> {f}
                   </div>
                 ))}
               </div>
               <button onClick={() => setCurrentPlan(p.id)} style={{
                 width: '100%', padding: '9px', borderRadius: '9px', border: 'none', cursor: active ? 'default' : 'pointer',
-                background: active ? 'rgba(124,58,237,0.15)' : p.popular ? 'linear-gradient(135deg,#7c3aed,#6d28d9)' : '#1e1e30',
-                color: active ? '#a78bfa' : '#f0f0f8', fontSize: '12px', fontWeight: '700',
+                background: active ? 'rgba(124,58,237,0.15)' : p.popular ? 'linear-gradient(135deg,#7c3aed,#6d28d9)' : 'var(--border)',
+                color: active ? '#a78bfa' : 'var(--text-primary)', fontSize: '12px', fontWeight: '700',
               }}>
                 {active ? '✓ Current Plan' : `Switch to ${p.name}`}
               </button>
@@ -255,53 +252,155 @@ function PlansSection({ cur, currentPlan, setCurrentPlan }) {
   )
 }
 
+// ── Create Invoice Modal ─────────────────────────────────────
+function CreateInvoiceModal({ clientId, onClose, onSuccess }) {
+  const [plan, setPlan]     = useState('Growth')
+  const [amount, setAmount] = useState(2499)
+  const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)) // YYYY-MM
+  const [status, setStatus] = useState('paid')
+  const [loading, setLoading] = useState(false)
+  const [msg, setMsg]       = useState('')
+
+  const create = async () => {
+    if (!plan.trim() || !amount || amount < 1) return setMsg('Enter a plan and valid amount')
+    setLoading(true); setMsg('')
+    try {
+      const r = await api.post('/billing/invoices', {
+        client_id: clientId,
+        plan,
+        amount_inr: amount,
+        period,
+        status,
+      })
+      setMsg(`✅ Invoice ${r.data.invoice_no} created!`)
+      setTimeout(onSuccess, 900)
+    } catch (e) {
+      setMsg(e.response?.data?.detail || 'Failed to create invoice')
+    }
+    setLoading(false)
+  }
+
+  const inp = { width: '100%', padding: '9px 12px', borderRadius: '9px', background: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }
+  const lbl = { fontSize: '10px', color: 'var(--text-muted)', marginBottom: '5px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.6px', fontWeight: '600' }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} onClick={e => e.stopPropagation()}
+        style={{ background: 'var(--bg-card)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: '18px', padding: '28px', width: '400px', boxShadow: '0 24px 60px rgba(0,0,0,0.8)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <p style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)' }}>Create Invoice</p>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '16px' }}>✕</button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div>
+            <label style={lbl}>Plan / Description</label>
+            <input value={plan} onChange={e => setPlan(e.target.value)} placeholder="e.g. Growth Plan" style={inp} />
+          </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ flex: 1 }}>
+              <label style={lbl}>Amount (₹)</label>
+              <input type="number" value={amount} onChange={e => setAmount(+e.target.value)} style={inp} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={lbl}>Period</label>
+              <input type="month" value={period} onChange={e => setPeriod(e.target.value)} style={inp} />
+            </div>
+          </div>
+          <div>
+            <label style={lbl}>Status</label>
+            <select value={status} onChange={e => setStatus(e.target.value)} style={inp}>
+              <option value="paid">Paid</option>
+              <option value="pending">Pending</option>
+            </select>
+          </div>
+          {msg && <p style={{ fontSize: '12px', color: msg.startsWith('✅') ? '#10b981' : '#f87171' }}>{msg}</p>}
+          <button onClick={create} disabled={loading} style={{
+            width: '100%', padding: '11px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+            background: 'linear-gradient(135deg,#7c3aed,#06b6d4)', color: '#fff',
+            fontSize: '13px', fontWeight: '800', opacity: loading ? 0.7 : 1, marginTop: '4px',
+          }}>
+            {loading ? 'Creating...' : 'Create Invoice'}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
 // ── C) Invoices Table ────────────────────────────────────────
 function InvoicesSection({ cur }) {
   const [tab, setTab]         = useState('invoices')
   const [invoices, setInvoices] = useState(SAMPLE_INV)
+  const [showCreate, setShowCreate] = useState(false)
+  const clientId = parseInt(localStorage.getItem('client_id') || '0')
 
-  useEffect(() => {
-    api.get('/billing/invoices').then(r => { if (r.data?.length) setInvoices(r.data) }).catch(() => {})
-  }, [])
+  const loadInvoices = () =>
+    api.get('/billing/invoices').then(r => { setInvoices(r.data || []) }).catch(() => {})
+
+  useEffect(() => { loadInvoices() }, [])
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-      style={{ background: '#0e0e1a', border: '1px solid #1e1e30', borderRadius: '16px', overflow: 'hidden' }}>
+      style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px', overflow: 'hidden' }}>
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '4px', padding: '14px 20px', borderBottom: '1px solid #1e1e30' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
         {['transactions', 'payments', 'invoices'].map(t => (
           <button key={t} onClick={() => setTab(t)} style={{
             padding: '5px 14px', borderRadius: '8px', border: 'none', cursor: 'pointer',
             fontSize: '12px', fontWeight: '600', textTransform: 'capitalize',
             background: tab === t ? '#7c3aed' : 'transparent',
-            color: tab === t ? '#fff' : '#55556a',
+            color: tab === t ? '#fff' : 'var(--text-muted)',
           }}>{t}</button>
         ))}
+        {tab === 'invoices' && (
+          <button onClick={() => setShowCreate(true)} style={{
+            marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '5px',
+            padding: '6px 12px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+            background: 'linear-gradient(135deg,#7c3aed,#06b6d4)', color: '#fff',
+            fontSize: '12px', fontWeight: '700',
+          }}>
+            <Plus size={13} /> New Invoice
+          </button>
+        )}
       </div>
 
-      {tab === 'invoices' && (
+      {showCreate && (
+        <CreateInvoiceModal
+          clientId={clientId}
+          onClose={() => setShowCreate(false)}
+          onSuccess={() => { loadInvoices(); setShowCreate(false) }}
+        />
+      )}
+
+      {tab === 'invoices' && invoices.length === 0 && (
+        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-dim)', fontSize: '13px' }}>
+          No invoices yet.
+        </div>
+      )}
+      {tab === 'invoices' && invoices.length > 0 && (
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{ borderBottom: '1px solid #1e1e30' }}>
+            <tr style={{ borderBottom: '1px solid var(--border)' }}>
               {['Invoice', 'Period', 'Total', 'Status', 'Date', 'PDF'].map(h => (
-                <th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontSize: '10px', fontWeight: '700', color: '#33334a', textTransform: 'uppercase', letterSpacing: '0.8px' }}>{h}</th>
+                <th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontSize: '10px', fontWeight: '700', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {invoices.map(inv => (
-              <tr key={inv.id} style={{ borderBottom: '1px solid #0a0a14' }}
+              <tr key={inv.id} style={{ borderBottom: '1px solid var(--bg-input)' }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(124,58,237,0.04)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                <td style={{ padding: '13px 20px', fontSize: '13px', color: '#f0f0f8', fontWeight: '600' }}>{inv.invoice_no}</td>
-                <td style={{ padding: '13px 20px', fontSize: '12px', color: '#55556a' }}>{inv.period}</td>
-                <td style={{ padding: '13px 20px', fontSize: '13px', color: '#f0f0f8', fontWeight: '700' }}>{fmt(inv.amount_inr, cur)}</td>
+                <td style={{ padding: '13px 20px', fontSize: '13px', color: 'var(--text-primary)', fontWeight: '600' }}>{inv.invoice_no}</td>
+                <td style={{ padding: '13px 20px', fontSize: '12px', color: 'var(--text-muted)' }}>{inv.period}</td>
+                <td style={{ padding: '13px 20px', fontSize: '13px', color: 'var(--text-primary)', fontWeight: '700' }}>{fmt(inv.amount_inr, cur)}</td>
                 <td style={{ padding: '13px 20px' }}>
                   <span style={{ fontSize: '11px', fontWeight: '700', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '3px 10px', borderRadius: '999px', textTransform: 'capitalize' }}>
                     {inv.status}
                   </span>
                 </td>
-                <td style={{ padding: '13px 20px', fontSize: '12px', color: '#55556a' }}>{inv.issued_at}</td>
+                <td style={{ padding: '13px 20px', fontSize: '12px', color: 'var(--text-muted)' }}>{inv.issued_at}</td>
                 <td style={{ padding: '13px 20px' }}>
                   <button onClick={() => window.open(`/billing/invoices/${inv.id}/pdf`)}
                     style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: '8px', padding: '5px 8px', cursor: 'pointer', color: '#a78bfa' }}>
@@ -315,7 +414,7 @@ function InvoicesSection({ cur }) {
       )}
 
       {tab !== 'invoices' && (
-        <div style={{ padding: '40px', textAlign: 'center', color: '#33334a', fontSize: '13px' }}>
+        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-dim)', fontSize: '13px' }}>
           No {tab} yet.
         </div>
       )}
@@ -366,30 +465,30 @@ function SpendControls() {
     setTimeout(() => setAutoMsg(''), 2500)
   }
 
-  const inp = { width: '100%', padding: '8px 12px', borderRadius: '8px', background: '#0a0a14', border: '1px solid #1e1e30', color: '#f0f0f8', fontSize: '13px' }
+  const inp = { width: '100%', padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)', fontSize: '13px' }
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
 
       {/* Spend Caps */}
-      <div style={{ background: '#0e0e1a', border: '1px solid #1e1e30', borderRadius: '14px', padding: '20px' }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '14px', padding: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
           <Shield size={14} color='#a78bfa' />
-          <p style={{ fontSize: '13px', fontWeight: '700', color: '#f0f0f8' }}>Spend caps</p>
+          <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Spend caps</p>
         </div>
-        <p style={{ fontSize: '11px', color: '#55556a', marginBottom: '16px' }}>
+        <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '16px' }}>
           Hard safety limit — calling pauses once you hit the cap. Set 0 for unlimited.
         </p>
         <div style={{ display: 'flex', gap: '12px', marginBottom: '14px' }}>
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: '10px', color: '#55556a', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Daily cap (₹)</p>
+            <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Daily cap (₹)</p>
             <input type='number' value={dailyCap} onChange={e => setDailyCap(+e.target.value)} style={inp} />
-            <p style={{ fontSize: '10px', color: '#33334a', marginTop: '4px' }}>0 = unlimited</p>
+            <p style={{ fontSize: '10px', color: 'var(--text-dim)', marginTop: '4px' }}>0 = unlimited</p>
           </div>
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: '10px', color: '#55556a', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Monthly cap (₹)</p>
+            <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Monthly cap (₹)</p>
             <input type='number' value={monthlyCap} onChange={e => setMonthlyCap(+e.target.value)} style={inp} />
-            <p style={{ fontSize: '10px', color: '#33334a', marginTop: '4px' }}>0 = unlimited</p>
+            <p style={{ fontSize: '10px', color: 'var(--text-dim)', marginTop: '4px' }}>0 = unlimited</p>
           </div>
         </div>
         {capMsg && <p style={{ fontSize: '12px', color: capMsg.startsWith('✅') ? '#10b981' : '#f87171', marginBottom: '10px' }}>{capMsg}</p>}
@@ -404,18 +503,18 @@ function SpendControls() {
       </div>
 
       {/* Auto-recharge */}
-      <div style={{ background: '#0e0e1a', border: '1px solid #1e1e30', borderRadius: '14px', padding: '20px' }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '14px', padding: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
           <RefreshCw size={14} color='#a78bfa' />
-          <p style={{ fontSize: '13px', fontWeight: '700', color: '#f0f0f8' }}>Auto-recharge</p>
+          <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Auto-recharge</p>
         </div>
-        <p style={{ fontSize: '11px', color: '#55556a', marginBottom: '16px' }}>
+        <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '16px' }}>
           Never run out mid-campaign. Auto top-up when balance drops below threshold.
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
           <div onClick={() => setAutoOn(p => !p)} style={{
             width: '38px', height: '22px', borderRadius: '11px', cursor: 'pointer', position: 'relative',
-            background: autoOn ? '#7c3aed' : '#1e1e30', transition: 'background 0.2s', flexShrink: 0,
+            background: autoOn ? '#7c3aed' : 'var(--border)', transition: 'background 0.2s', flexShrink: 0,
           }}>
             <div style={{
               position: 'absolute', top: '3px', left: autoOn ? '19px' : '3px',
@@ -423,17 +522,17 @@ function SpendControls() {
             }} />
           </div>
           <div>
-            <p style={{ fontSize: '12px', fontWeight: '600', color: '#f0f0f8' }}>Enable auto-recharge</p>
-            <p style={{ fontSize: '10px', color: '#55556a' }}>Automatically add funds when wallet runs low</p>
+            <p style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>Enable auto-recharge</p>
+            <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Automatically add funds when wallet runs low</p>
           </div>
         </div>
         <div style={{ display: 'flex', gap: '12px', marginBottom: '14px', opacity: autoOn ? 1 : 0.4 }}>
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: '10px', color: '#55556a', marginBottom: '6px' }}>When balance falls below (₹)</p>
+            <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '6px' }}>When balance falls below (₹)</p>
             <input type='number' value={threshold} onChange={e => setThreshold(+e.target.value)} disabled={!autoOn} style={inp} />
           </div>
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: '10px', color: '#55556a', marginBottom: '6px' }}>Automatically add (₹)</p>
+            <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '6px' }}>Automatically add (₹)</p>
             <input type='number' value={topup} onChange={e => setTopup(+e.target.value)} disabled={!autoOn} style={inp} />
           </div>
         </div>
@@ -445,7 +544,7 @@ function SpendControls() {
         }}>
           {autoSaving ? 'Saving...' : 'Save preferences'}
         </button>
-        <p style={{ fontSize: '10px', color: '#33334a', marginTop: '8px', textAlign: 'center' }}>
+        <p style={{ fontSize: '10px', color: 'var(--text-dim)', marginTop: '8px', textAlign: 'center' }}>
           Stripe · Razorpay · UPI — connect in .env
         </p>
       </div>
@@ -470,8 +569,8 @@ export default function Billing() {
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
         style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <h1 style={{ fontSize: '26px', fontWeight: '800', color: '#f0f0f8' }}>Billing</h1>
-          <p style={{ fontSize: '13px', color: '#55556a', marginTop: '4px' }}>
+          <h1 style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text-primary)' }}>Billing</h1>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
             Wallet · Plans · Invoices — powered by Stripe / Razorpay
           </p>
         </div>

@@ -7,8 +7,8 @@ const CRM_URL = 'https://crm.tzmicha.com'
 const CRM_API = 'https://api.tzmicha.com/api'
 
 const card = {
-  background: '#0e0e1a',
-  border: '1px solid #1e1e30',
+  background: 'var(--bg-card)',
+  border: '1px solid var(--border)',
   borderRadius: '16px',
   padding: '24px',
 }
@@ -109,15 +109,15 @@ export default function Integrations() {
     <div>
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '26px', fontWeight: '900', color: '#f0f0f8', letterSpacing: '-0.6px' }}>Integrations</h1>
-        <p style={{ fontSize: '13px', color: '#55556a', marginTop: '4px' }}>Connect your tools and sync data across platforms</p>
+        <h1 style={{ fontSize: '26px', fontWeight: '900', color: 'var(--text-primary)', letterSpacing: '-0.6px' }}>Integrations</h1>
+        <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>Connect your tools and sync data across platforms</p>
       </motion.div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '16px' }}>
 
         {/* ── Tzmicha CRM Card ── */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-          style={{ ...card, border: crmStatus === 'connected' ? '1px solid rgba(16,185,129,0.3)' : '1px solid #1e1e30' }}>
+          style={{ ...card, border: crmStatus === 'connected' ? '1px solid rgba(16,185,129,0.3)' : '1px solid var(--border)' }}>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -125,8 +125,8 @@ export default function Integrations() {
                 <Zap size={20} color="white" />
               </div>
               <div>
-                <p style={{ fontSize: '15px', fontWeight: '800', color: '#f0f0f8' }}>Tzmicha CRM</p>
-                <a href={CRM_URL} target="_blank" rel="noreferrer" style={{ fontSize: '11px', color: '#55556a', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
+                <p style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>Tzmicha CRM</p>
+                <a href={CRM_URL} target="_blank" rel="noreferrer" style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
                   crm.tzmicha.com <ExternalLink size={10} />
                 </a>
               </div>
@@ -137,12 +137,12 @@ export default function Integrations() {
           {crmStatus === 'connected' && crmInfo ? (
             <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: '12px', padding: '14px', marginBottom: '16px' }}>
               <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', marginBottom: '8px' }}>✅ Connected as</p>
-              <p style={{ fontSize: '13px', color: '#f0f0f8', fontWeight: '600' }}>{crmInfo.name || crmInfo.email || 'CRM User'}</p>
-              <p style={{ fontSize: '11px', color: '#55556a' }}>{crmInfo.email || ''}</p>
+              <p style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '600' }}>{crmInfo.name || crmInfo.email || 'CRM User'}</p>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{crmInfo.email || ''}</p>
             </div>
           ) : (
             <div style={{ marginBottom: '16px' }}>
-              <p style={{ fontSize: '12px', color: '#55556a', marginBottom: '8px' }}>Enter your Tzmicha CRM API token</p>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>Enter your Tzmicha CRM API token</p>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <div style={{ flex: 1, position: 'relative' }}>
                   <input
@@ -152,16 +152,16 @@ export default function Integrations() {
                     placeholder="Bearer token from CRM settings..."
                     style={{
                       width: '100%', padding: '10px 36px 10px 12px', borderRadius: '10px',
-                      background: '#0a0a14', border: '1px solid #1e1e30',
-                      color: '#f0f0f8', fontSize: '12px', outline: 'none', boxSizing: 'border-box',
+                      background: 'var(--bg-input)', border: '1px solid var(--border)',
+                      color: 'var(--text-primary)', fontSize: '12px', outline: 'none', boxSizing: 'border-box',
                     }}
                   />
-                  <button onClick={() => setShowToken(!showToken)} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#55556a' }}>
+                  <button onClick={() => setShowToken(!showToken)} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                     {showToken ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
                 </div>
               </div>
-              <p style={{ fontSize: '10px', color: '#33334a', marginTop: '6px' }}>
+              <p style={{ fontSize: '10px', color: 'var(--text-dim)', marginTop: '6px' }}>
                 Get token: CRM → Settings → API Keys → Generate Token
               </p>
             </div>
@@ -189,12 +189,12 @@ export default function Integrations() {
           </div>
 
           {lastSync && (
-            <p style={{ fontSize: '10px', color: '#33334a', marginTop: '10px' }}>Last sync: {lastSync}</p>
+            <p style={{ fontSize: '10px', color: 'var(--text-dim)', marginTop: '10px' }}>Last sync: {lastSync}</p>
           )}
 
           {/* Sync Log */}
           {syncLog.length > 0 && (
-            <div style={{ marginTop: '14px', background: '#0a0a14', border: '1px solid #1e1e30', borderRadius: '10px', padding: '12px', maxHeight: '140px', overflowY: 'auto' }}>
+            <div style={{ marginTop: '14px', background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px', maxHeight: '140px', overflowY: 'auto' }}>
               {syncLog.map((l, i) => (
                 <p key={i} style={{ fontSize: '11px', color: l.type === 'success' ? '#10b981' : l.type === 'error' ? '#f87171' : '#a78bfa', marginBottom: '3px', fontFamily: 'monospace' }}>{l.msg}</p>
               ))}
@@ -212,35 +212,35 @@ export default function Integrations() {
                 <Webhook size={16} color="#fbbf24" />
               </div>
               <div>
-                <p style={{ fontSize: '13px', fontWeight: '700', color: '#f0f0f8' }}>Webhook</p>
-                <p style={{ fontSize: '10px', color: '#55556a' }}>Receive CRM events</p>
+                <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Webhook</p>
+                <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Receive CRM events</p>
               </div>
             </div>
-            <div style={{ background: '#0a0a14', border: '1px solid #1e1e30', borderRadius: '8px', padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-              <p style={{ fontSize: '10px', color: '#55556a', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{webhookUrl}</p>
-              <button onClick={copyWebhook} style={{ background: 'none', border: 'none', cursor: 'pointer', color: copied ? '#10b981' : '#55556a', flexShrink: 0 }}>
+            <div style={{ background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+              <p style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{webhookUrl}</p>
+              <button onClick={copyWebhook} style={{ background: 'none', border: 'none', cursor: 'pointer', color: copied ? '#10b981' : 'var(--text-muted)', flexShrink: 0 }}>
                 {copied ? <CheckCircle2 size={14} /> : <Copy size={14} />}
               </button>
             </div>
-            <p style={{ fontSize: '10px', color: '#33334a', marginTop: '8px' }}>Paste this URL in CRM → Settings → Webhooks</p>
+            <p style={{ fontSize: '10px', color: 'var(--text-dim)', marginTop: '8px' }}>Paste this URL in CRM → Settings → Webhooks</p>
           </motion.div>
 
           {/* Coming Soon integrations */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} style={card}>
-            <p style={{ fontSize: '12px', fontWeight: '700', color: '#55556a', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '14px' }}>Coming Soon</p>
+            <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '14px' }}>Coming Soon</p>
             {[
               { name: 'Zapier',    icon: '⚡', desc: 'Automate workflows' },
               { name: 'Slack',     icon: '💬', desc: 'Call notifications' },
               { name: 'WhatsApp',  icon: '📱', desc: 'Message leads' },
               { name: 'Google Sheets', icon: '📊', desc: 'Export data' },
             ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', borderBottom: i < 3 ? '1px solid #0e0e1a' : 'none' }}>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', borderBottom: i < 3 ? '1px solid var(--bg-card)' : 'none' }}>
                 <span style={{ fontSize: '18px' }}>{item.icon}</span>
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '12px', fontWeight: '600', color: '#f0f0f8' }}>{item.name}</p>
-                  <p style={{ fontSize: '10px', color: '#33334a' }}>{item.desc}</p>
+                  <p style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>{item.name}</p>
+                  <p style={{ fontSize: '10px', color: 'var(--text-dim)' }}>{item.desc}</p>
                 </div>
-                <span style={{ fontSize: '9px', fontWeight: '700', color: '#33334a', background: '#0a0a14', padding: '3px 8px', borderRadius: '999px', border: '1px solid #1e1e30' }}>SOON</span>
+                <span style={{ fontSize: '9px', fontWeight: '700', color: 'var(--text-dim)', background: 'var(--bg-input)', padding: '3px 8px', borderRadius: '999px', border: '1px solid var(--border)' }}>SOON</span>
               </div>
             ))}
           </motion.div>
@@ -254,7 +254,7 @@ export default function Integrations() {
 
 function StatusBadge({ status }) {
   const map = {
-    idle:       { color: '#55556a', bg: 'rgba(85,85,106,0.1)',   label: 'Not Connected' },
+    idle:       { color: 'var(--text-muted)', bg: 'rgba(85,85,106,0.1)',   label: 'Not Connected' },
     checking:   { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  label: 'Checking...' },
     connected:  { color: '#10b981', bg: 'rgba(16,185,129,0.1)',  label: 'Connected' },
     error:      { color: '#f87171', bg: 'rgba(248,113,113,0.1)', label: 'Auth Failed' },

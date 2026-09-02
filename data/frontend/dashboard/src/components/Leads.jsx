@@ -53,8 +53,8 @@ export default function Leads() {
       <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }}
         style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'28px' }}>
         <div>
-          <h1 style={{ fontSize:'26px', fontWeight:'900', color:'#f0f0f8', letterSpacing:'-0.5px' }}>Leads</h1>
-          <p style={{ fontSize:'13px', color:'#55556a', marginTop:'4px' }}>{leads.length} contacts in pipeline</p>
+          <h1 style={{ fontSize:'26px', fontWeight:'900', color:'var(--text-primary)', letterSpacing:'-0.5px' }}>Leads</h1>
+          <p style={{ fontSize:'13px', color:'var(--text-muted)', marginTop:'4px' }}>{leads.length} contacts in pipeline</p>
         </div>
         <div style={{ display:'flex', gap:'8px' }}>
           <a href="#" onClick={e => { e.preventDefault(); const base = window.location.hostname==='localhost'?'http://localhost:8000':'/api'; const clientId = localStorage.getItem('client_id'); fetch(`${base}/export/leads`, { headers:{'x-client-id': clientId} }).then(r=>r.blob()).then(b=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='leads.csv'; a.click() }) }}
@@ -73,11 +73,11 @@ export default function Leads() {
       {/* Filters */}
       <div style={{ display:'flex', gap:'10px', alignItems:'center', marginBottom:'24px', flexWrap:'wrap' }}>
         <div style={{ position:'relative', flex:1, maxWidth:'300px' }}>
-          <Search size={14} style={{ position:'absolute', left:'13px', top:'50%', transform:'translateY(-50%)', color:'#33334a' }}/>
+          <Search size={14} style={{ position:'absolute', left:'13px', top:'50%', transform:'translateY(-50%)', color:'var(--text-dim)' }}/>
           <input type="text" placeholder="Search leads…" value={search} onChange={e => setSearch(e.target.value)}
             className="input" style={{ paddingLeft:'38px' }}/>
         </div>
-        <div style={{ display:'flex', gap:'4px', background:'#0e0e1a', borderRadius:'12px', padding:'4px', border:'1px solid #1e1e30' }}>
+        <div style={{ display:'flex', gap:'4px', background:'var(--bg-card)', borderRadius:'12px', padding:'4px', border:'1px solid var(--border)' }}>
           {['all','hot','warm','cold'].map(f => {
             const active = filter === f
             const g = GLOW[f] || '124,58,237'
@@ -100,9 +100,9 @@ export default function Leads() {
       {/* Card Grid */}
       {filtered.length === 0 ? (
         <div style={{ textAlign:'center', padding:'80px 0' }}>
-          <UserPlus size={32} style={{ color:'#1e1e30', margin:'0 auto 14px' }}/>
-          <p style={{ fontSize:'14px', color:'#33334a', fontWeight:'600' }}>No leads found</p>
-          <p style={{ fontSize:'12px', color:'#1e1e30', marginTop:'4px' }}>Add your first lead to get started</p>
+          <UserPlus size={32} style={{ color:'var(--border)', margin:'0 auto 14px' }}/>
+          <p style={{ fontSize:'14px', color:'var(--text-dim)', fontWeight:'600' }}>No leads found</p>
+          <p style={{ fontSize:'12px', color:'var(--text-dim)', marginTop:'4px' }}>Add your first lead to get started</p>
           <motion.button whileTap={{ scale:0.97 }} onClick={() => setShowModal(true)}
             className="btn btn-primary" style={{ marginTop:'16px' }}>
             <Plus size={14}/> Add Lead
@@ -117,7 +117,7 @@ export default function Leads() {
               <motion.div key={lead.id}
                 initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }} transition={{ delay: i * 0.04 }}
                 style={{
-                  background:'#0e0e1a', borderRadius:'16px', padding:'20px',
+                  background:'var(--bg-card)', borderRadius:'16px', padding:'20px',
                   border:`1px solid rgba(${g},0.18)`,
                   boxShadow:`0 0 0 1px rgba(${g},0.04), 0 8px 24px rgba(0,0,0,0.3)`,
                   transition:'all 0.2s', cursor:'default',
@@ -135,8 +135,8 @@ export default function Leads() {
                     fontSize:'17px', fontWeight:'900', color:c,
                   }}>{lead.name?.[0]?.toUpperCase() || '?'}</div>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <p style={{ fontSize:'14px', fontWeight:'700', color:'#f0f0f8', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{lead.name}</p>
-                    <p style={{ fontSize:'11px', color:'#33334a', marginTop:'2px' }}>{lead.email || '—'}</p>
+                    <p style={{ fontSize:'14px', fontWeight:'700', color:'var(--text-primary)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{lead.name}</p>
+                    <p style={{ fontSize:'11px', color:'var(--text-dim)', marginTop:'2px' }}>{lead.email || '—'}</p>
                   </div>
                   <span style={{
                     fontSize:'9px', fontWeight:'800', padding:'3px 9px', borderRadius:'999px',
@@ -149,15 +149,15 @@ export default function Leads() {
                 </div>
 
                 {/* Phone */}
-                <p style={{ fontSize:'12px', color:'#55556a', marginBottom:'14px', fontFamily:'monospace' }}>{lead.phone}</p>
+                <p style={{ fontSize:'12px', color:'var(--text-muted)', marginBottom:'14px', fontFamily:'monospace' }}>{lead.phone}</p>
 
                 {/* Score bar */}
                 <div>
                   <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'6px' }}>
-                    <span style={{ fontSize:'9px', fontWeight:'700', color:'#33334a', textTransform:'uppercase', letterSpacing:'0.8px' }}>Score</span>
-                    <span style={{ fontSize:'12px', fontWeight:'900', color:'#f0f0f8' }}>{lead.score}<span style={{ fontSize:'9px', color:'#33334a' }}>/10</span></span>
+                    <span style={{ fontSize:'9px', fontWeight:'700', color:'var(--text-dim)', textTransform:'uppercase', letterSpacing:'0.8px' }}>Score</span>
+                    <span style={{ fontSize:'12px', fontWeight:'900', color:'var(--text-primary)' }}>{lead.score}<span style={{ fontSize:'9px', color:'var(--text-dim)' }}>/10</span></span>
                   </div>
-                  <div style={{ height:'4px', borderRadius:'999px', background:'#1e1e30', overflow:'hidden' }}>
+                  <div style={{ height:'4px', borderRadius:'999px', background:'var(--border)', overflow:'hidden' }}>
                     <motion.div
                       initial={{ width:0 }} animate={{ width:`${(lead.score||0)*10}%` }} transition={{ duration:0.7, ease:'easeOut', delay: i*0.04+0.2 }}
                       style={{ height:'100%', borderRadius:'999px', background:`rgb(${g})`, boxShadow:`0 0 6px rgba(${g},0.5)` }}
@@ -166,7 +166,7 @@ export default function Leads() {
                 </div>
 
                 {/* Status */}
-                <p style={{ fontSize:'10px', color:'#33334a', marginTop:'10px', textTransform:'capitalize' }}>{lead.status}</p>
+                <p style={{ fontSize:'10px', color:'var(--text-dim)', marginTop:'10px', textTransform:'capitalize' }}>{lead.status}</p>
               </motion.div>
             )
           })}
@@ -183,14 +183,14 @@ export default function Leads() {
               transition={{ type:'spring', stiffness:300, damping:28 }}
               onClick={e => e.stopPropagation()}
               style={{
-                background:'#0e0e1a', border:'1px solid rgba(124,58,237,0.25)',
+                background:'var(--bg-card)', border:'1px solid rgba(124,58,237,0.25)',
                 borderRadius:'20px', padding:'28px', width:'100%', maxWidth:'400px',
                 boxShadow:'0 0 0 1px rgba(124,58,237,0.08), 0 40px 80px rgba(0,0,0,0.7)',
               }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'22px' }}>
-                <h2 style={{ fontSize:'18px', fontWeight:'800', color:'#f0f0f8' }}>New Lead</h2>
+                <h2 style={{ fontSize:'18px', fontWeight:'800', color:'var(--text-primary)' }}>New Lead</h2>
                 <button onClick={() => setShowModal(false)}
-                  style={{ background:'rgba(255,255,255,0.05)', border:'1px solid #1e1e30', borderRadius:'8px', width:'30px', height:'30px', cursor:'pointer', color:'#55556a', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  style={{ background:'var(--bg-input)', border:'1px solid var(--border)', borderRadius:'8px', width:'30px', height:'30px', cursor:'pointer', color:'var(--text-muted)', display:'flex', alignItems:'center', justifyContent:'center' }}>
                   <X size={15}/>
                 </button>
               </div>

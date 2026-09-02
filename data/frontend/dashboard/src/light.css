@@ -106,16 +106,16 @@
   -webkit-text-fill-color: transparent !important;
 }
 [data-theme="light"] .appshell-nav-btn {
-  color: #40e0d0 !important;
+  color: #5a8a84 !important;
   background: transparent !important;
 }
 [data-theme="light"] .appshell-nav-btn:hover {
   color: #20c8b8 !important;
-  background: transparent !important;
+  background: rgba(64,224,208,0.08) !important;
 }
 [data-theme="light"] .appshell-nav-btn.active {
-  color: #40e0d0 !important;
-  background: transparent !important;
+  color: #20c8b8 !important;
+  background: rgba(64,224,208,0.18) !important;
 }
 [data-theme="light"] .appshell-active-ring {
   border-color: #40e0d0 !important;
@@ -308,3 +308,51 @@
   color: #0a1a18 !important;
   border-color: #c8f0ec !important;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   EXTRA OVERRIDES — superadmin + VoiceLab remaining dark hexes
+   Catches colors not covered above so ALL pages theme correctly
+   ══════════════════════════════════════════════════════════════ */
+
+/* Backgrounds */
+[data-theme="light"] [style*="background:#0e0e1a"],
+[data-theme="light"] [style*="background: #0e0e1a"] { background: #ffffff !important; }
+[data-theme="light"] [style*="background:#0a0a14"],
+[data-theme="light"] [style*="background: #0a0a14"] { background: #edfcfa !important; }
+[data-theme="light"] [style*="background:#1a1a2e"],
+[data-theme="light"] [style*="background: #1a1a2e"] { background: #c8f0ec !important; }
+[data-theme="light"] [style*="background:#181f2d"],
+[data-theme="light"] [style*="background: #181f2d"] { background: #f0fffe !important; }
+[data-theme="light"] [style*="background:#29223c"],
+[data-theme="light"] [style*="background: #29223c"] { background: #edfcfa !important; }
+[data-theme="light"] [style*="background:#181828"],
+[data-theme="light"] [style*="background: #181828"] { background: #f0fffe !important; }
+
+/* Borders */
+[data-theme="light"] [style*="border:1px solid #1e1e30"],
+[data-theme="light"] [style*="border: 1px solid #1e1e30"],
+[data-theme="light"] [style*="border:1px solid #1a1a2e"],
+[data-theme="light"] [style*="border: 1px solid #1a1a2e"],
+[data-theme="light"] [style*="border:1px solid #2b3447"],
+[data-theme="light"] [style*="border: 1px solid #2b3447"] { border-color: #c8f0ec !important; }
+
+[data-theme="light"] [style*="borderBottom:'1px solid #1a1a2e'"],
+[data-theme="light"] [style*="borderBottom: '1px solid #1a1a2e'"],
+[data-theme="light"] [style*="borderBottom:'1px solid #0e0e1a'"],
+[data-theme="light"] [style*="borderBottom: '1px solid #0e0e1a'"],
+[data-theme="light"] [style*="borderBottom:'1px solid #2b3447'"],
+[data-theme="light"] [style*="borderBottom: '1px solid #2b3447'"] { border-bottom-color: #c8f0ec !important; }
+
+/* Text */
+[data-theme="light"] [style*="color:#f0f0f8"],
+[data-theme="light"] [style*="color: #f0f0f8"] { color: #0a1a18 !important; }
+[data-theme="light"] [style*="color:#c0c0d8"],
+[data-theme="light"] [style*="color: #c0c0d8"] { color: #2a5a54 !important; }
+[data-theme="light"] [style*="color:#55556a"],
+[data-theme="light"] [style*="color: #55556a"] { color: #5a8a84 !important; }
+[data-theme="light"] [style*="color:#33334a"],
+[data-theme="light"] [style*="color: #33334a"] { color: #9acac4 !important; }
+[data-theme="light"] [style*="color:#a78bfa"],
+[data-theme="light"] [style*="color: #a78bfa"] { color: #20c8b8 !important; }
+[data-theme="light"] [style*="color:#c4b5fd"],
+[data-theme="light"] [style*="color: #c4b5fd"] { color: #20c8b8 !important; }

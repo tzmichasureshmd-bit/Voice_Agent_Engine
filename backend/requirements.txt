@@ -4,6 +4,8 @@ uvloop
 httptools
 groq
 razorpay
+bcrypt
+slowapi
 sqlalchemy
 psycopg2-binary
 pydantic

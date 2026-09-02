@@ -125,6 +125,12 @@ class AIEmployee(Base):
     industry = Column(String(100), default="")
     voice = Column(String(50), default="suhani")
     languages = Column(String(200), default="Telugu, English")
+    language = Column(String(50), default="English")       # primary language
+    gender = Column(String(20), default="Female")
+    type = Column(String(20), default="outbound")          # outbound | inbound
+    goal = Column(String(200), default="Lead Generation and Qualification")
+    company_website = Column(String(200), default="")
+    script_mode = Column(String(20), default="manual")     # manual | ai
     greeting = Column(Text, default="")
     script = Column(Text)
     company_name = Column(String(200), default="")

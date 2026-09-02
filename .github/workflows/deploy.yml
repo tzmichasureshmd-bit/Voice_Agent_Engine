@@ -29,6 +29,15 @@ jobs:
             # Write .env from GitHub Secret to correct location
             echo "${{ secrets.ENV_PRODUCTION }}" > /opt/voice-ai/deploy/.env.production
 
+            # Write Firebase service account key (never in git)
+            echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > /opt/voice-ai/backend/serviceAccountKey.json
+
+            # Write Firebase service account key (never in git — secret)
+            echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > /opt/voice-ai/backend/serviceAccountKey.json
+
+            # Write Firebase service account key (never in git)
+            echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > /opt/voice-ai/backend/serviceAccountKey.json
+
             # Build & restart with prod compose
             docker rm -f voice-backend voice-frontend 2>/dev/null || true
             docker compose -f deploy/docker-compose.prod.yml down --remove-orphans

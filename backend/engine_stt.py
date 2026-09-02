@@ -18,10 +18,10 @@ def _load():
         print("Whisper ready.")
     return _model
 
-def transcribe(audio_bytes: bytes, language: str = None) -> str:
+def transcribe(audio_bytes: bytes, language: str = None, fmt: str = "webm") -> str:
+    """fmt='webm' for browser MediaRecorder, fmt='mp3' for Exotel recordings"""
     model = _load()
-    # .webm suffix so ffmpeg auto-converts browser MediaRecorder audio
-    with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as f:
+    with tempfile.NamedTemporaryFile(suffix=f".{fmt}", delete=False) as f:
         f.write(audio_bytes)
         tmp = f.name
     try:
@@ -41,9 +41,9 @@ def transcribe_file(path: str, language: str = None) -> str:
     result = model.transcribe(path, **opts)
     return result["text"].strip()
 
-def detect_language(audio_bytes: bytes) -> str:
+def detect_language(audio_bytes: bytes, fmt: str = "webm") -> str:
     model = _load()
-    with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as f:
+    with tempfile.NamedTemporaryFile(suffix=f".{fmt}", delete=False) as f:
         f.write(audio_bytes)
         tmp = f.name
     try:

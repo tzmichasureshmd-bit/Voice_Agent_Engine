@@ -42,13 +42,13 @@ function AddMoneyModal({ cur, onClose, onSuccess }) {
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
         onClick={e => e.stopPropagation()}
         style={{
-          background: '#0e0e1a', border: '1px solid rgba(124,58,237,0.3)',
+          background: 'var(--bg-card)', border: '1px solid rgba(124,58,237,0.3)',
           borderRadius: '18px', padding: '28px', width: '360px',
           boxShadow: '0 24px 60px rgba(0,0,0,0.8)',
         }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <p style={{ fontSize: '16px', fontWeight: '800', color: '#f0f0f8' }}>Add Money to Wallet</p>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#55556a' }}>
+          <p style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)' }}>Add Money to Wallet</p>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
             <X size={18} />
           </button>
         </div>
@@ -58,22 +58,22 @@ function AddMoneyModal({ cur, onClose, onSuccess }) {
             <button key={a} onClick={() => setAmount(a)} style={{
               padding: '8px 4px', borderRadius: '8px', border: 'none', cursor: 'pointer',
               fontSize: '12px', fontWeight: '700',
-              background: amount === a ? 'rgba(124,58,237,0.2)' : '#1e1e30',
-              color: amount === a ? '#a78bfa' : '#9999b3',
+              background: amount === a ? 'rgba(124,58,237,0.2)' : 'var(--border)',
+              color: amount === a ? '#a78bfa' : 'var(--text-secondary)',
               outline: amount === a ? '1px solid #7c3aed' : 'none',
             }}>₹{a.toLocaleString()}</button>
           ))}
         </div>
 
-        <p style={{ fontSize: '11px', color: '#55556a', marginBottom: '6px' }}>Custom amount (₹)</p>
+        <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Custom amount (₹)</p>
         <input type="number" value={amount} onChange={e => setAmount(+e.target.value)}
           style={{
             width: '100%', padding: '10px 14px', borderRadius: '10px', marginBottom: '6px',
-            background: '#0a0a14', border: '1px solid #1e1e30',
-            color: '#f0f0f8', fontSize: '16px', fontWeight: '700',
+            background: 'var(--bg-input)', border: '1px solid var(--border)',
+            color: 'var(--text-primary)', fontSize: '16px', fontWeight: '700',
           }} />
         {cur.code !== 'INR' && (
-          <p style={{ fontSize: '11px', color: '#55556a', marginBottom: '12px' }}>≈ {fmt(amount, cur)}</p>
+          <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '12px' }}>≈ {fmt(amount, cur)}</p>
         )}
 
         {msg && (
@@ -120,19 +120,19 @@ export default function WalletCard({ cur }) {
     <>
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
         style={{
-          background: '#0e0e1a', border: '1px solid rgba(124,58,237,0.2)',
+          background: 'var(--bg-card)', border: '1px solid rgba(124,58,237,0.2)',
           borderRadius: '16px', padding: '24px',
         }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
           <Wallet size={14} color="#a78bfa" />
-          <span style={{ fontSize: '11px', fontWeight: '700', color: '#55556a', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
             Wallet Balance
           </span>
         </div>
-        <p style={{ fontSize: '38px', fontWeight: '900', color: '#f0f0f8', marginBottom: '4px' }}>
+        <p style={{ fontSize: '38px', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '4px' }}>
           {balance === null ? '—' : fmt(balance, cur)}
         </p>
-        <p style={{ fontSize: '11px', color: '#55556a', marginBottom: '20px' }}>
+        <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '20px' }}>
           Prepaid — calling pauses automatically if balance runs out.
         </p>
         <button onClick={() => setShowModal(true)} style={{

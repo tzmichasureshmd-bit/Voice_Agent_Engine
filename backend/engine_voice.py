@@ -1,27 +1,24 @@
 """
 TZMICHA ENGINE — Full Voice Pipeline
 STT (Whisper) → AI (Groq) → TTS (Edge TTS)
-Telugu / Hindi / Indian English — all free.
+Telugu / Hindi / Indian English / British English / Kannada — all free.
+
+All language/voice mappings come from lang_config.py.
 """
+import logging
+
 import engine_stt as stt
 import engine_tts as tts
 from groq import Groq
 from config import GROQ_API_KEY, AI_MODEL
+from lang_config import (
+    resolve_language,
+    get_ai_instruction,
+    ORCHESTRATOR_TO_CODE,
+)
 
+log = logging.getLogger(__name__)
 groq = Groq(api_key=GROQ_API_KEY)
-
-# Maps Whisper language codes → our lang codes
-_LANG_MAP = {
-    "te": "te", "hi": "hi",
-    "en": "en", "english": "en",
-    "telugu": "te", "hindi": "hi",
-}
-
-LANG_PROMPTS = {
-    "te": "Respond in Telugu. Telugu-English mix (Tenglish) is fine.",
-    "hi": "Respond in Hindi. Hindi-English mix (Hinglish) is fine.",
-    "en": "Respond in Indian English. Keep it natural and warm.",
-}
 
 
 def process_voice_turn(
@@ -31,23 +28,27 @@ def process_voice_turn(
     language: str = "en",
     gender: str = "female",
     auto_detect_language: bool = True,
+    pace: float | None = None,
 ) -> dict:
     """
-    Full pipeline: audio → text → AI → audio
+    Full pipeline: audio → text → AI → audio.
     Returns: { user_text, ai_text, audio_bytes, language }
     """
-    # Step 1: STT
-    detected_lang = language
+    # Step 1: STT — detect or use provided language
     if auto_detect_language:
-        detected_lang = stt.detect_language(audio_bytes)
-        detected_lang = _LANG_MAP.get(detected_lang, "en")
+        raw_detected = stt.detect_language(audio_bytes)
+        detected_lang = resolve_language(raw_detected)
+        log.info("[PIPELINE] STT auto-detected: %s → canonical: %s", raw_detected, detected_lang)
+    else:
+        detected_lang = resolve_language(language)
+        log.info("[PIPELINE] STT using provided language: %s", detected_lang)
 
-    user_text = stt.transcribe(audio_bytes, language=detected_lang if detected_lang != "en" else None)
+    user_text = stt.transcribe(audio_bytes, language=detected_lang)
     if not user_text:
         return {"error": "Could not transcribe audio"}
 
-    # Step 2: AI — inject language instruction into system prompt
-    lang_instruction = LANG_PROMPTS.get(detected_lang, LANG_PROMPTS["en"])
+    # Step 2: AI — inject language instruction from central config
+    lang_instruction = get_ai_instruction(detected_lang)
     full_prompt = f"{system_prompt}\n\nLANGUAGE: {lang_instruction}"
 
     conversation_history.append({"role": "user", "content": user_text})
@@ -61,20 +62,33 @@ def process_voice_turn(
     ai_text = response.choices[0].message.content.strip()
     conversation_history.append({"role": "assistant", "content": ai_text})
 
-    # Step 3: TTS — speak in detected language with Indian voice
-    audio_out = tts.synthesize(ai_text, language=detected_lang, gender=gender)
+    # Step 3: TTS — speak in detected language with correct voice
+    audio_out = tts.synthesize(ai_text, language=detected_lang, gender=gender, pace=pace)
 
     return {
-        "user_text": user_text,
-        "ai_text": ai_text,
+        "user_text":   user_text,
+        "ai_text":     ai_text,
         "audio_bytes": audio_out,
-        "language": detected_lang,
+        "language":    detected_lang,
     }
 
 
-def text_to_speech(text: str, language: str = "en", gender: str = "female") -> bytes:
-    return tts.synthesize(text, language=language, gender=gender)
+def text_to_speech(
+    text: str,
+    language: str = "en",
+    gender: str = "female",
+    pace: float | None = None,
+) -> bytes:
+    return tts.synthesize(text, language=language, gender=gender, pace=pace)
 
 
-def speech_to_text(audio_bytes: bytes, language: str = None) -> str:
+def speech_to_text(audio_bytes: bytes, language: str | None = None) -> str:
     return stt.transcribe(audio_bytes, language=language)
+
+
+def orchestrator_lang_to_tts_lang(orchestrator_lang: str) -> str:
+    """
+    Convert orchestrator session language string (e.g. 'telugu', 'english')
+    to a canonical TTS language code (e.g. 'te', 'en').
+    """
+    return ORCHESTRATOR_TO_CODE.get(orchestrator_lang.lower(), "en")

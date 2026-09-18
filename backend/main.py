@@ -83,9 +83,7 @@ limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-app.add_middleware(GZipMiddleware, minimum_size=1000)
-
-# CORS — restrict to known origins. Extra origins can be added via ALLOWED_ORIGINS env (comma-separated).
+# CORS must be added BEFORE GZip so error responses also get CORS headers
 _default_origins = [
     "http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173",
     "https://voice.tzmicha.com", "https://www.voice.tzmicha.com",
@@ -100,6 +98,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.include_router(billing_router)
 
 
@@ -939,6 +938,12 @@ async def exotel_status(call_id: str, request: Request, db: Session = Depends(ge
         active_voice_calls[call_id]["status"] = status
         if status in ("completed", "failed", "busy", "no-answer"):
             _save_call_log(call_id, db)
+            # Clean up old audio files after each call ends
+            try:
+                from voice_caller import cleanup_audio_cache
+                cleanup_audio_cache()
+            except Exception:
+                pass
     return Response(content="<Response/>" , media_type="application/xml")
 
 
@@ -1180,12 +1185,18 @@ import io
 
 class TTSRequest(BaseModel):
     text: str
-    language: str = "en-IN"
-    speaker: str = "female"
-    pace: float = 1.1
+    language: str = "en"
+    speaker: str = "female"   # 'female' | 'male'
+    pace: float = 1.2         # 0.5–2.0; 1.0 = normal speed
 
 class GrammarRequest(BaseModel):
     text: str
+
+@app.get("/voicelab/languages")
+def get_voicelab_languages(client: Client = Depends(get_current_client)):
+    """Return the list of supported languages for the VoiceLab UI."""
+    from lang_config import get_supported_languages
+    return {"languages": get_supported_languages()}
 
 @app.post("/voicelab/fix-grammar")
 def fix_grammar(req: GrammarRequest, client: Client = Depends(get_current_client)):
@@ -1775,29 +1786,46 @@ def assign_leads_to_campaign(campaign_id: int, lead_ids: list[int], client: Clie
 
 @app.post("/voicelab/tts/tzmicha")
 async def voicelab_tts_tzmicha(req: TTSRequest, client: Client = Depends(get_current_client)):
-    """Edge TTS - Telugu / Hindi / Indian English. Free, no API key."""
+    """Edge TTS — Telugu / Hindi / Indian English / British English / Kannada. Free, no API key."""
     if not req.text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty")
+    # Validate pace range
+    pace = max(0.5, min(2.0, float(req.pace))) if req.pace else 1.2
+    # Normalise gender
+    gender = req.speaker.lower() if req.speaker else "female"
+    if gender not in ("male", "female"):
+        gender = "female"
     try:
         import engine_tts
-        lang = req.language.split("-")[0] if "-" in req.language else req.language
-        gender = "male" if req.speaker == "male" else "female"
-        audio_bytes = await engine_tts.synthesize_async(req.text, language=lang, gender=gender)
-        return StreamingResponse(io.BytesIO(audio_bytes), media_type="audio/mpeg",
-            headers={"Content-Disposition": "attachment; filename=voice.mp3"})
-    except Exception as e:
+        audio_bytes = await engine_tts.synthesize_async(
+            req.text, language=req.language, gender=gender, pace=pace
+        )
+        return StreamingResponse(
+            io.BytesIO(audio_bytes),
+            media_type="audio/mpeg",
+            headers={"Content-Disposition": "attachment; filename=voice.mp3"},
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"TTS error: {str(e)[:120]}")
 
 @app.post("/voicelab/stt/tzmicha")
-async def voicelab_stt_tzmicha(file: UploadFile = File(...), client: Client = Depends(get_current_client)):
+async def voicelab_stt_tzmicha(
+    file: UploadFile = File(...),
+    language: Optional[str] = None,   # optional hint: 'te', 'hi', 'en', 'kn', 'en-GB'
+    client: Client = Depends(get_current_client),
+):
     audio_bytes = await file.read()
     if not audio_bytes:
         raise HTTPException(status_code=400, detail="Empty audio file")
     try:
         import engine_stt
-        transcript = engine_stt.transcribe(audio_bytes)
-        language = engine_stt.detect_language(audio_bytes)
-        return {"transcript": transcript, "detected_language": language}
+        transcript = engine_stt.transcribe(audio_bytes, language=language)
+        detected   = engine_stt.detect_language(audio_bytes)
+        return {"transcript": transcript, "detected_language": detected}
     except ImportError:
         return {"transcript": "", "detected_language": "en", "note": "Engine not loaded"}
     except Exception as e:
@@ -1907,6 +1935,8 @@ if __name__ == "__main__":
     print("\nStarting AI Caller SaaS Platform v2.0...")
     print(f"API Docs: http://localhost:{PORT}/docs")
     print(f"Server: http://localhost:{PORT}")
+    if not os.getenv("ADMIN_KEY"):
+        print("WARNING: ADMIN_KEY not set in .env — using insecure default. Set ADMIN_KEY in production.")
     import sys
     uvicorn.run(
         app, host=HOST, port=PORT,

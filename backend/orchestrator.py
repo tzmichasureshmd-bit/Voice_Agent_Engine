@@ -1,21 +1,17 @@
 """
-Conversation Orchestrator v3
-Fixes all 10 issues from QA review:
-1. extract_questions bug fixed (no punctuation dependency)
-2. Natural reply length (not forced 1 sentence)
-3. Filler words only when natural
-4. Dynamic language switching (not permanent lock)
-5. Context-aware intent (LLM fallback for ambiguous)
-6. Emotion with confidence score
-7. Structured topic state (current/previous/history)
-8. LLM returns answered/remaining questions
-9. Session abstraction (Redis-ready)
-10. Barge-in properly tracked for analytics
+Conversation Orchestrator v4
+Multilingual: Telugu / Hindi / Indian English / British English / Kannada.
+All language rules sourced from lang_config.py — no duplicate mappings.
 """
-import time, re
+import time, re, logging
 from groq import Groq
 from config import GROQ_API_KEY
+from lang_config import (
+    LANGUAGES, LOCALE_ALIASES, ORCHESTRATOR_TO_CODE,
+    resolve_language, get_ai_instruction,
+)
 
+log = logging.getLogger(__name__)
 groq = Groq(api_key=GROQ_API_KEY)
 
 FAST_MODEL    = "llama-3.1-8b-instant"
@@ -68,45 +64,88 @@ def get_session(session_id: str): return _sessions.get(session_id)
 def end_session(session_id: str): return _sessions.pop(session_id, None)
 
 
-# ── Language Detection (dynamic, not permanent lock) ──────────────────────
-_TELUGU = {"enti","cheppandi","ayindi","kadha","ante","chestunnav","na","ra","ga","le",
-           "em","emo","anni","ikkade","akkade","meeru","nenu","mee","naa","telugu","lo",
-           "ki","tho","undi","ledu","adugutunnanu","matladandi","artham","kaadu","avunu",
-           "sare","bagundi","ela","ekkada","enduku","evaru","emi","cheppu","matladu","naku"}
-_HINDI  = {"kya","hai","haan","nahi","acha","theek","bhai","yaar","karo","bol","sun",
-           "dekh","matlab","samjha","bilkul","hindi","mujhe","aap","main","hum","tum",
-           "kaise","kyun","kab","kahan","batao","samjho","thoda","bahut","accha",
-           "shukriya","namaste","bolo","boliye"}
+# ── Language Detection (dynamic, sourced from lang_config) ───────────────
+# Build detection structures from central config at import time.
+_LANG_WORDS: dict[str, set] = {
+    code: cfg["detection_words"]
+    for code, cfg in LANGUAGES.items()
+    if cfg["detection_words"]
+}
+_LANG_PHRASES: dict[str, list] = {
+    code: cfg["switch_phrases"]
+    for code, cfg in LANGUAGES.items()
+    if cfg["switch_phrases"]
+}
+_LANG_ACK: dict[str, str] = {
+    code: cfg["switch_ack"]
+    for code, cfg in LANGUAGES.items()
+}
+_LANG_GOODBYE: dict[str, str] = {
+    code: cfg["goodbye"]
+    for code, cfg in LANGUAGES.items()
+}
 
-_LANG_PHRASES = {
-    "telugu": ["telugu lo","speak telugu","talk in telugu","in telugu","telugu please",
-               "can you telugu","can you speak telugu","i prefer telugu","naku telugu",
-               "telugu lo matladandi","telugu lo cheppandi","telugu lo cheppu"],
-    "hindi":  ["hindi mein","hindi me","speak hindi","talk in hindi","in hindi",
-               "hindi please","hindi boliye","can you hindi","can you speak hindi",
-               "hindi mein baat karo","i prefer hindi","mujhe hindi"],
-    "english":["speak english","talk in english","in english","english please",
-               "back to english","english lo","can you english","english mein boliye"],
+# Orchestrator uses lowercase word names internally ("telugu", "english", etc.)
+# Map canonical code → orchestrator name
+_CODE_TO_ORCH: dict[str, str] = {
+    "te":    "telugu",
+    "hi":    "hindi",
+    "en":    "english",
+    "en-GB": "british english",
+    "kn":    "kannada",
 }
 
 def detect_language(text: str, current: str = "english") -> str:
+    """
+    Detect language from text. Returns orchestrator-internal name.
+    Priority: explicit switch phrase > script detection > word matching > current.
+    """
     t = text.lower()
-    # Explicit request = highest priority, and it's dynamic (can switch back)
-    for lang, phrases in _LANG_PHRASES.items():
-        if any(p in t for p in phrases):
-            return lang
-    words = set(re.findall(r'\b\w+\b', t))
-    tel = len(words & _TELUGU)
-    hin = len(words & _HINDI)
-    # Strong signal = switch
-    if tel >= 2: return "telugu"
-    if hin >= 2: return "hindi"
-    # Weak signal = stay current if already in that language
-    if tel == 1 and current == "telugu": return "telugu"
-    if hin == 1 and current == "hindi":  return "hindi"
-    # If mostly English words, follow the customer dynamically
-    if tel == 0 and hin == 0 and len(words) > 3:
+
+    # 1. Explicit switch phrases (highest priority)
+    # Sort by phrase length descending so longer/more-specific phrases match first
+    # e.g. 'british english' must match before 'english'
+    all_phrases = [
+        (code, phrase)
+        for code, phrases in _LANG_PHRASES.items()
+        for phrase in phrases
+    ]
+    all_phrases.sort(key=lambda x: len(x[1]), reverse=True)
+    for code, phrase in all_phrases:
+        if phrase in t:
+            return _CODE_TO_ORCH.get(code, "english")
+
+    # 2. Unicode script detection
+    import re as _re
+    if _re.search(r'[\u0C00-\u0C7F]', text):   # Telugu script
+        return "telugu"
+    if _re.search(r'[\u0900-\u097F]', text):   # Devanagari (Hindi)
+        return "hindi"
+    if _re.search(r'[\u0C80-\u0CFF]', text):   # Kannada script
+        return "kannada"
+
+    # 3. Transliteration word matching
+    words = set(_re.findall(r'\b\w+\b', t))
+    scores: dict[str, int] = {}
+    for code, word_set in _LANG_WORDS.items():
+        hit = len(words & word_set)
+        if hit > 0:
+            scores[_CODE_TO_ORCH.get(code, "english")] = hit
+
+    if scores:
+        best = max(scores, key=scores.get)
+        if scores[best] >= 2:
+            return best
+        # Weak signal — stay current if already in that language
+        if scores.get(current, 0) >= 1:
+            return current
+
+    # 4. Mostly Latin words → English (preserve British variant)
+    if len(words) > 3 and not scores:
+        if current in ("british english",):
+            return current   # preserve British English once set
         return "english"
+
     return current  # stay in current if unclear
 
 
@@ -235,6 +274,19 @@ def clean_for_tts(text: str) -> str:
 
 # ── Smart Model Router ────────────────────────────────────────────────────
 def choose_model(session: dict, user_text: str) -> str:
+    """
+    Use fast model for short/simple turns, quality model for complex ones.
+    Reduces latency for greetings and simple yes/no responses.
+    """
+    text = user_text.strip()
+    word_count = len(text.split())
+    # Short turns (≤6 words) or simple acknowledgements → fast model
+    simple_patterns = [
+        "yes", "no", "ok", "okay", "sure", "bye", "hello", "hi",
+        "haan", "nahi", "avunu", "kaadu", "sare",
+    ]
+    if word_count <= 6 or any(text.lower().startswith(p) for p in simple_patterns):
+        return FAST_MODEL
     return QUALITY_MODEL
 
 
@@ -242,7 +294,7 @@ def choose_model(session: dict, user_text: str) -> str:
 def build_system_prompt(session: dict) -> str:
     emotion   = session["emotion"]
     intent    = session["intent"]
-    language  = session["language"]
+    language  = session["language"]   # orchestrator name e.g. "telugu"
     agent     = session["agent_name"]
     product   = session["product_info"] or "AI calling assistant"
     script    = session["script"]
@@ -265,12 +317,9 @@ def build_system_prompt(session: dict) -> str:
         "neutral":   "Warm, friendly, conversational.",
     }.get(emotion, "Warm and natural.")
 
-    lang_rule = {
-        "telugu":  "Respond in Telugu-English mix (Tenglish). Natural like real Telugu speakers talk.",
-        "hindi":   "Respond in Hindi-English mix. Natural like real Hindi speakers talk.",
-        "mixed":   "Match the customer's exact language mix naturally.",
-        "english": "Clear, warm Indian English.",
-    }.get(language, f"Respond in {language} mixed with English naturally.")
+    # Get language instruction from central config
+    canonical = ORCHESTRATOR_TO_CODE.get(language, "en")
+    lang_rule = get_ai_instruction(canonical)
 
     intent_rule = {
         "not_interested": "Respect it. Ask ONE gentle question why, then offer callback.",
@@ -284,7 +333,6 @@ def build_system_prompt(session: dict) -> str:
 
     return f"""You are {agent}, a human sales agent on a phone call. Product: {product}.
 {f'Script: {script}' if script else ''}{f' Goals: {goals}' if goals else ''}
-Language: {lang_rule}
 {topic_ctx}
 
 YOUR ONLY JOB: Listen to what the customer says and give a direct, clear, natural reply.
@@ -296,10 +344,11 @@ RULES:
 4. If they ask about price — say you will get exact details, ask for their requirement.
 5. Keep reply to 1-2 sentences max.
 6. Sound like a real human — warm, natural, never robotic.
-7. Language: {lang_rule}
+7. {lang_rule}
 8. NEVER say 'I am an AI'. NEVER say 'could you repeat'. NEVER loop or repeat yourself.
 9. If you don't understand — say 'Tell me more about that' naturally.
 10. Goodbye = end warmly.
+{f'11. {intent_rule}' if intent_rule else ''}
 
 IMPORTANT: The customer just said something. Reply DIRECTLY to that. Do not introduce yourself again if already done. Do not ask questions you already asked."""
 
@@ -317,13 +366,19 @@ def process_turn(session_id: str, user_text: str,
     if barge_in:
         session["barge_in_count"] += 1
 
-    # Handle Deepgram language hints
-    if user_text.startswith('[lang:telugu]'):
-        user_text = user_text.replace('[lang:telugu] ', '').replace('[lang:telugu]', '').strip()
-        session["language"] = "telugu"
-    elif user_text.startswith('[lang:hindi]'):
-        user_text = user_text.replace('[lang:hindi] ', '').replace('[lang:hindi]', '').strip()
-        session["language"] = "hindi"
+    # Handle STT language hints (from Whisper detected_language)
+    _hint_map = {
+        '[lang:telugu]':          'telugu',
+        '[lang:hindi]':           'hindi',
+        '[lang:kannada]':         'kannada',
+        '[lang:british english]': 'british english',
+        '[lang:english]':         'english',
+    }
+    for hint, lang_name in _hint_map.items():
+        if user_text.startswith(hint):
+            user_text = user_text[len(hint):].strip()
+            session["language"] = lang_name
+            break
 
     # Detect state
     prev_lang = session["language"]
@@ -346,15 +401,15 @@ def process_turn(session_id: str, user_text: str,
     session["topic"]["pending_questions"].extend(questions)
     session["topic"]["pending_questions"] = session["topic"]["pending_questions"][-5:]
 
-    # Language switch acknowledgment
+    # Language switch acknowledgment — sourced from lang_config
     lang_switched = prev_lang != session["language"]
     if lang_switched:
-        ack = {
-            "telugu":  "[Customer switched to Telugu. Acknowledge warmly: 'Sare! Telugu lo matladdam!' then answer.] ",
-            "hindi":   "[Customer switched to Hindi. Acknowledge warmly: 'Haan! Hindi mein baat karte hain!' then answer.] ",
-            "english": "[Customer switched to English. Continue naturally in English.] ",
-        }.get(session["language"], "")
-        user_text = ack + user_text
+        canonical = ORCHESTRATOR_TO_CODE.get(session["language"], "en")
+        ack = _LANG_ACK.get(canonical, "")
+        if ack:
+            user_text = f"[Customer switched to {session['language']}. Acknowledge warmly: '{ack.strip()}' then answer.] " + user_text
+        log.info("[ORCH] Language switch: %s → %s (session=%s)",
+                 prev_lang, session['language'], session_id[:8])
 
     # Choose model based on complexity
     model = choose_model(session, user_text)

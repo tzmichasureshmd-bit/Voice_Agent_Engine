@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Save, Eye, EyeOff, Bell, Globe, Shield, Cpu, Phone, CheckCircle2, MessageCircle } from 'lucide-react'
+import { Save, Eye, EyeOff, Bell, Globe, Shield, Cpu, Phone, CheckCircle2, MessageCircle, Loader2 } from 'lucide-react'
+import api from '../api'
 
 const card = { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px' }
 
@@ -45,14 +46,56 @@ const Toggle = ({ value, onChange, label }) => (
 )
 
 export default function Settings() {
-  const [saved, setSaved] = useState(false)
+  const [saved,   setSaved]   = useState(false)
+  const [saving,  setSaving]  = useState(false)
+  const [loading, setLoading] = useState(true)
 
   // AI Engine
-  const [groqKey, setGroqKey]       = useState(localStorage.getItem('s_groq') || '')
+  const [groqKey, setGroqKey]       = useState('')
   const [showGroq, setShowGroq]     = useState(false)
-  const [llmModel, setLlmModel]     = useState(localStorage.getItem('s_model') || 'llama3-8b-8192')
-  const [language, setLanguage]     = useState(localStorage.getItem('s_lang') || 'en')
-  const [voiceEngine, setVoiceEngine] = useState(localStorage.getItem('s_voice') || 'edge-tts')
+  const [llmModel, setLlmModel]     = useState('groq/compound-mini')
+  const [language, setLanguage]     = useState('en')
+  const [voiceEngine, setVoiceEngine] = useState('edge-tts')
+
+  // Load from backend on mount
+  useEffect(() => {
+    api.get('/auth/profile')
+      .then(r => {
+        const d = r.data
+        // ai_tone field reused to store serialised settings JSON
+        try {
+          const s = JSON.parse(d.ai_tone || '{}')
+          if (s.__settings__) {
+            setLlmModel(s.llm_model   || 'groq/compound-mini')
+            setLanguage(s.language    || 'en')
+            setVoiceEngine(s.voice_engine || 'edge-tts')
+            setCallerId(s.caller_id   || '')
+            setMaxCalls(s.max_calls   || '5')
+            setCallDelay(s.call_delay || '2')
+            setNotifHot(s.notif_hot   !== false)
+            setNotifCall(s.notif_call !== false)
+            setNotifEmail(!!s.notif_email)
+            setEmailAddr(s.email_addr || '')
+            setWaAutoSend(!!s.wa_auto)
+            setWaBothDir(s.wa_both    !== false)
+            setWaNumbers(s.wa_numbers || [])
+            setSummaryLang(s.summary_lang || 'en')
+            setSessionTimeout(s.session_timeout || '60')
+            return
+          }
+        } catch {}
+        // fallback: read from localStorage
+        setLlmModel(localStorage.getItem('s_model') || 'groq/compound-mini')
+        setLanguage(localStorage.getItem('s_lang')  || 'en')
+        setVoiceEngine(localStorage.getItem('s_voice') || 'edge-tts')
+      })
+      .catch(() => {
+        setLlmModel(localStorage.getItem('s_model') || 'groq/compound-mini')
+        setLanguage(localStorage.getItem('s_lang')  || 'en')
+        setVoiceEngine(localStorage.getItem('s_voice') || 'edge-tts')
+      })
+      .finally(() => setLoading(false))
+  }, [])
 
   // Calling
   const [callerId, setCallerId]     = useState(localStorage.getItem('s_caller') || '')
@@ -81,25 +124,29 @@ export default function Settings() {
   // Security
   const [sessionTimeout, setSessionTimeout] = useState(localStorage.getItem('s_timeout') || '60')
 
-  const handleSave = () => {
-    localStorage.setItem('s_groq', groqKey)
-    localStorage.setItem('s_model', llmModel)
-    localStorage.setItem('s_lang', language)
-    localStorage.setItem('s_voice', voiceEngine)
-    localStorage.setItem('s_caller', callerId)
-    localStorage.setItem('s_maxcalls', maxCalls)
-    localStorage.setItem('s_delay', callDelay)
-    localStorage.setItem('s_notif_hot', notifHot)
-    localStorage.setItem('s_notif_call', notifCall)
-    localStorage.setItem('s_notif_email', notifEmail)
-    localStorage.setItem('s_email', emailAddr)
-    localStorage.setItem('s_wa_auto', waAutoSend)
-    localStorage.setItem('s_wa_numbers', JSON.stringify(waNumbers))
-    localStorage.setItem('s_wa_both', waBothDir)
-    localStorage.setItem('s_summary_lang', summaryLang)
-    localStorage.setItem('s_timeout', sessionTimeout)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2500)
+  const handleSave = async () => {
+    setSaving(true)
+    // Pack all settings into a JSON blob stored in ai_tone field
+    const settingsBlob = JSON.stringify({
+      __settings__: true,
+      llm_model: llmModel, language, voice_engine: voiceEngine,
+      caller_id: callerId, max_calls: maxCalls, call_delay: callDelay,
+      notif_hot: notifHot, notif_call: notifCall, notif_email: notifEmail,
+      email_addr: emailAddr, wa_auto: waAutoSend, wa_both: waBothDir,
+      wa_numbers: waNumbers, summary_lang: summaryLang, session_timeout: sessionTimeout,
+    })
+    try {
+      await api.put('/auth/profile', { ai_tone: settingsBlob })
+      // Also mirror to localStorage as fast-read cache
+      localStorage.setItem('s_model', llmModel)
+      localStorage.setItem('s_lang', language)
+      localStorage.setItem('s_voice', voiceEngine)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
+    } catch {
+      setSaved(false)
+    }
+    setSaving(false)
   }
 
   return (
@@ -108,10 +155,10 @@ export default function Settings() {
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px' }}>
         <div>
           <h1 style={{ fontSize: '26px', fontWeight: '900', color: 'var(--text-primary)', letterSpacing: '-0.6px' }}>Settings</h1>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>Configure your AI Voice Engine</p>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>{loading ? 'Loading your settings…' : 'Configure your AI Voice Engine'}</p>
         </div>
-        <button onClick={handleSave} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '10px', background: saved ? 'rgba(16,185,129,0.15)' : 'linear-gradient(135deg,#7c3aed,#06b6d4)', border: saved ? '1px solid rgba(16,185,129,0.3)' : 'none', color: saved ? '#10b981' : 'white', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>
-          {saved ? <><CheckCircle2 size={14} /> Saved!</> : <><Save size={14} /> Save Changes</>}
+        <button onClick={handleSave} disabled={saving || loading} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '10px', background: saved ? 'rgba(16,185,129,0.15)' : 'linear-gradient(135deg,#7c3aed,#06b6d4)', border: saved ? '1px solid rgba(16,185,129,0.3)' : 'none', color: saved ? '#10b981' : 'white', fontSize: '13px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+          {saving ? <><Loader2 size={14} className="spin" /> Saving…</> : saved ? <><CheckCircle2 size={14} /> Saved!</> : <><Save size={14} /> Save Changes</>}
         </button>
       </motion.div>
 
@@ -129,10 +176,10 @@ export default function Settings() {
           </Field>
           <Field label="LLM Model">
             <select value={llmModel} onChange={e => setLlmModel(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', background: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)', fontSize: '12px', outline: 'none' }}>
-              <option value="llama3-8b-8192">LLaMA 3 8B (Fast)</option>
-              <option value="llama3-70b-8192">LLaMA 3 70B (Smart)</option>
-              <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
-              <option value="gemma-7b-it">Gemma 7B</option>
+              <option value="groq/compound-mini">Groq Compound Mini (Fast · Free)</option>
+              <option value="groq/compound">Groq Compound (Smart · Free)</option>
+              <option value="qwen/qwen3-32b">Qwen 3 32B (Free)</option>
+              <option value="meta-llama/llama-4-scout-17b-16e-instruct">LLaMA 4 Scout 17B (Free)</option>
             </select>
           </Field>
           <Field label="Voice Engine">
@@ -261,6 +308,7 @@ export default function Settings() {
         </Section>
 
       </div>
+      <style>{`.spin{animation:spin 1s linear infinite}@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 }

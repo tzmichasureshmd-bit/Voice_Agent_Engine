@@ -1,5 +1,5 @@
 // VoiceLab — Tab switcher layout (TTS / STT / Agent), fits in viewport, no scroll
-// All logic (speak, download, STT, agent, humanize, grammar) preserved exactly.
+// Languages: Telugu / Hindi / Indian English / British English / Kannada
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -8,14 +8,22 @@ import {
 } from 'lucide-react'
 import api from '../api'
 
+// ── Supported languages (must match backend lang_config.py) ──────────────
+const SUPPORTED_VOICES = [
+  { id: 'te',    label: 'Telugu',          lang: 'te',    flag: '🇮🇳', type: 'Indian · Telugu' },
+  { id: 'hi',    label: 'Hindi',           lang: 'hi',    flag: '🇮🇳', type: 'Indian · Hindi' },
+  { id: 'en',    label: 'Indian English',  lang: 'en',    flag: '🇮🇳', type: 'Indian · English' },
+  { id: 'en-GB', label: 'British English', lang: 'en-GB', flag: '🇬🇧', type: 'British · English' },
+  { id: 'kn',    label: 'Kannada',         lang: 'kn',    flag: '🇮🇳', type: 'Indian · Kannada' },
+  { id: 'mix',   label: 'Auto Mix',        lang: 'mix',   flag: '🌐', type: 'Telugu + Hindi + English (script-split)' },
+]
+
 const MODEL = {
   color: '#a78bfa',
   rgb: '167,139,250',
   ttsEndpoint: '/voicelab/tts/tzmicha',
   sttEndpoint: '/voicelab/stt/tzmicha',
-  voices: [
-    { id: 'default', label: 'Mix', lang: 'mix', type: 'Telugu + Hindi + English' },
-  ],
+  voices: SUPPORTED_VOICES,
 }
 
 const TABS = [
@@ -28,7 +36,8 @@ export default function VoiceLab() {
   const [activeTab,       setActiveTab]   = useState('tts')
   const activeModel = MODEL
   const [text,            setText]        = useState('')
-  const [selectedVoice,   setSelectedVoice] = useState(MODEL.voices[0])
+  const [selectedVoice,   setSelectedVoice] = useState(SUPPORTED_VOICES[0])  // Telugu default
+  const [gender,          setGender]      = useState('female')               // 'female' | 'male'
   const [pace,            setPace]        = useState(1.2)
   const [audioBlob,       setAudioBlob]   = useState(null)
   const [audioUrl,        setAudioUrl]    = useState(null)
@@ -39,6 +48,16 @@ export default function VoiceLab() {
   const [copied,          setCopied]      = useState(false)
   const [status,          setStatus]      = useState('')
   const audioRef = useRef(new Audio())
+  const mixCtxRef = useRef(null)  // Web Audio context for Auto Mix — killed on stop
+  // Apply playback rate LIVE whenever pace slider moves — works mid-playback
+  useEffect(() => {
+    const a = audioRef.current
+    if (a) {
+      a.playbackRate = pace
+      a.preservesPitch = true
+    }
+    paceRef.current = pace
+  }, [pace])
 
   // STT
   const [sttText,   setSttText]   = useState('')
@@ -61,11 +80,12 @@ export default function VoiceLab() {
   const selectedVoiceRef = useRef(selectedVoice)
   const activeModelRef   = useRef(MODEL)
   const paceRef          = useRef(pace)
+  const genderRef        = useRef(gender)
 
   useEffect(() => { selectedVoiceRef.current = selectedVoice }, [selectedVoice])
-  useEffect(() => { paceRef.current          = pace          }, [pace])
+  useEffect(() => { genderRef.current = gender }, [gender])
 
-  useEffect(() => { setAudioBlob(null); setAudioUrl(null); setStatus('') }, [selectedVoice, pace])
+  useEffect(() => { setAudioBlob(null); setAudioUrl(null); setStatus('') }, [selectedVoice, pace, gender])
   useEffect(() => {
     api.get('/ai-employees').then(r => setEmployees(r.data.employees || [])).catch(() => {})
     return () => cleanupVoiceResources()
@@ -97,60 +117,145 @@ export default function VoiceLab() {
   }
 
 
-  // Detect language from script characters
-  const detectLang = (s) => {
-    if (/[\u0C00-\u0C7F]/.test(s)) return 'te'  // Telugu script
-    if (/[\u0900-\u097F]/.test(s)) return 'hi'  // Hindi/Devanagari script
-    return 'en'
-  }
-
-  // Split text into segments by script, merge same-lang consecutive segments
+  // Split text into segments by script — keep sentences together, merge same-lang consecutive
   const splitByScript = (txt) => {
-    const words = txt.split(/\s+/).filter(Boolean)
+    const sentences = txt.split(/(?<=[.!?\u0964])\s+|\n+/).filter(Boolean)
     const segs = []
-    for (const w of words) {
-      const lang = detectLang(w)
+    for (const s of sentences) {
+      const teChars = (s.match(/[\u0C00-\u0C7F]/g) || []).length
+      const hiChars = (s.match(/[\u0900-\u097F]/g) || []).length
+      const knChars = (s.match(/[\u0C80-\u0CFF]/g) || []).length
+      const total   = s.replace(/\s/g, '').length || 1
+      const lang = teChars / total > 0.3 ? 'te'
+                 : hiChars / total > 0.3 ? 'hi'
+                 : knChars / total > 0.3 ? 'kn'
+                 : 'en'
       if (segs.length && segs[segs.length - 1].lang === lang) {
-        segs[segs.length - 1].text += ' ' + w
+        segs[segs.length - 1].text += ' ' + s
       } else {
-        segs.push({ lang, text: w })
+        segs.push({ lang, text: s })
       }
     }
-    return segs
+    return segs.filter(s => s.text.trim())
   }
   const speak = async () => {
     if (!text.trim()) return
-    const voice = selectedVoiceRef.current
-    const model = activeModelRef.current
-    const speed = paceRef.current
+    const voice  = selectedVoiceRef.current
+    const model  = activeModelRef.current
+    const speed  = paceRef.current          // float 0.5–2.0, passed to backend
+    const spkr   = genderRef.current        // 'female' | 'male'
     setGenerating(true); setStatus('Generating voice...')
     try {
       if (voice.lang === 'mix') {
         const segments = splitByScript(text.trim())
-        setPlaying(true); setStatus('🔊 Mix · Telugu + Hindi + English')
-        for (const seg of segments) {
-          const r = await api.post(model.ttsEndpoint,
-            { text: seg.text, language: seg.lang, speaker: 'default', pace: speed },
-            { responseType: 'blob' })
-          const u = URL.createObjectURL(new Blob([r.data], { type: 'audio/mpeg' }))
-          await new Promise((res2) => { const a = new Audio(u); a.onended = res2; a.onerror = res2; a.play().catch(res2) })
-          URL.revokeObjectURL(u)
+        setPlaying(true); setStatus('🔊 Auto Mix · Continuous speech...')
+
+        // Fetch all segments in parallel — gender (spkr) is authoritative, lang only sets language
+        const fetchSeg = (seg) => api.post(model.ttsEndpoint,
+          { text: seg.text, language: seg.lang, speaker: spkr, pace: speed },
+          { responseType: 'arraybuffer' }
+        ).then(r => r.data).catch(() => null)
+
+        const buffers = await Promise.all(segments.map(fetchSeg))
+
+        // Use Web Audio to trim silence and schedule seamless playback
+        const AudioContext = window.AudioContext || window.webkitAudioContext
+        const ctx = new AudioContext()
+        mixCtxRef.current = ctx
+
+        const trimSilence = (channelData, sampleRate, threshold = 0.01) => {
+          let start = 0, end = channelData.length - 1
+          while (start < end && Math.abs(channelData[start]) < threshold) start++
+          while (end > start && Math.abs(channelData[end]) < threshold) end--
+          // Keep 20ms natural padding at boundaries
+          const pad = Math.floor(sampleRate * 0.02)
+          return { start: Math.max(0, start - pad), end: Math.min(channelData.length - 1, end + pad) }
         }
+
+        let scheduleTime = ctx.currentTime + 0.05 // tiny initial buffer
+        const sources = []
+
+        for (const buf of buffers) {
+          if (!buf) continue
+          try {
+            const decoded = await ctx.decodeAudioData(buf.slice(0))
+            const ch = decoded.getChannelData(0)
+            const { start, end } = trimSilence(ch, decoded.sampleRate)
+            const trimmedLength = end - start + 1
+            if (trimmedLength <= 0) continue
+
+            // Create trimmed buffer
+            const trimmed = ctx.createBuffer(decoded.numberOfChannels, trimmedLength, decoded.sampleRate)
+            for (let c = 0; c < decoded.numberOfChannels; c++) {
+              trimmed.copyToChannel(decoded.getChannelData(c).slice(start, end + 1), c)
+            }
+
+            const src = ctx.createBufferSource()
+            src.buffer = trimmed
+            src.playbackRate.value = paceRef.current
+            src.connect(ctx.destination)
+            src.start(scheduleTime)
+            sources.push(src)
+
+            // Duration adjusted for playback rate
+            scheduleTime += trimmed.duration / paceRef.current
+          } catch { /* skip bad segment */ }
+        }
+
+        // Wait for all to finish then clean up
+        const totalDuration = (scheduleTime - ctx.currentTime) * 1000
+        await new Promise(r => setTimeout(r, totalDuration + 200))
+        sources.forEach(s => { try { s.stop() } catch {} })
+        if (mixCtxRef.current) { ctx.close(); mixCtxRef.current = null }
+
         setPlaying(false); setStatus('✅ Done'); setGenerating(false); return
       }
-      const res = await api.post(model.ttsEndpoint,
-        { text: text.trim(), language: voice.lang, speaker: voice.id, pace: speed },
-        { responseType: 'blob' })
-      const blob = new Blob([res.data], { type: 'audio/mpeg' })
-      if (audioUrl) URL.revokeObjectURL(audioUrl)
-      const url  = URL.createObjectURL(blob)
-      setAudioBlob(blob); setAudioUrl(url)
-      audioRef.current.pause()
-      audioRef.current.src = url
-      audioRef.current.onplay  = () => { setPlaying(true);  setStatus(`🔊 ${voice.label} · ${voice.type}`) }
-      audioRef.current.onended = () => { setPlaying(false); setStatus('✅ Done — click ⬇ to save') }
-      audioRef.current.onerror = () => { setPlaying(false); setStatus('') }
-      await audioRef.current.play()
+      // Auto-chunk long text into 490-char pieces and play sequentially
+      const chunks = []
+      const sentences = text.trim().match(/[^.!?\n]+[.!?\n]*/g) || [text.trim()]
+      let cur = ''
+      for (const s of sentences) {
+        if ((cur + s).length > 490) { if (cur) chunks.push(cur.trim()); cur = s }
+        else cur += s
+      }
+      if (cur.trim()) chunks.push(cur.trim())
+
+      if (chunks.length === 1) {
+        const res = await api.post(model.ttsEndpoint,
+          { text: chunks[0], language: voice.lang, speaker: spkr, pace: speed },
+          { responseType: 'blob' })
+        const blob = new Blob([res.data], { type: 'audio/mpeg' })
+        if (audioUrl) URL.revokeObjectURL(audioUrl)
+        const url  = URL.createObjectURL(blob)
+        setAudioBlob(blob); setAudioUrl(url)
+        audioRef.current.pause()
+        audioRef.current.src = url
+        audioRef.current.playbackRate = paceRef.current
+        audioRef.current.preservesPitch = true
+        audioRef.current.onplay  = () => { setPlaying(true);  setStatus(`🔊 ${voice.label} · ${voice.type} · ${paceRef.current}×`) }
+        audioRef.current.onended = () => { setPlaying(false); setStatus('✅ Done — click ⬇ to save') }
+        audioRef.current.onerror = () => { setPlaying(false); setStatus('') }
+        await audioRef.current.play()
+      } else {
+        setPlaying(true)
+        for (let i = 0; i < chunks.length; i++) {
+          setStatus(`🔊 ${voice.label} · chunk ${i+1}/${chunks.length}`)
+          const res = await api.post(model.ttsEndpoint,
+            { text: chunks[i], language: voice.lang, speaker: spkr, pace: speed },
+            { responseType: 'blob' })
+          const url = URL.createObjectURL(new Blob([res.data], { type: 'audio/mpeg' }))
+          await new Promise(r => {
+            const a = new Audio(url)
+            a.playbackRate = paceRef.current
+            a.preservesPitch = true
+            a.onended = r; a.onerror = r; a.play().catch(r)
+          })
+          URL.revokeObjectURL(url)
+          // tiny natural gap between chunks — like a breath
+          if (i < chunks.length - 1) await new Promise(r => setTimeout(r, 80))
+        }
+        setPlaying(false); setStatus('✅ Done')
+      }
     } catch (err) {
       // responseType:'blob' means error bodies come back as Blobs — decode them
       let detail = err?.message || 'Unknown error'
@@ -182,7 +287,13 @@ export default function VoiceLab() {
   }
 
   const stopAudio = () => {
+    // Stop regular audio
     audioRef.current.pause(); audioRef.current.currentTime = 0
+    // Stop Auto Mix Web Audio
+    if (mixCtxRef.current) {
+      try { mixCtxRef.current.close() } catch {}
+      mixCtxRef.current = null
+    }
     window.speechSynthesis.cancel(); setPlaying(false); setStatus('')
   }
 
@@ -206,7 +317,7 @@ export default function VoiceLab() {
     setGenerating(true); setStatus('Generating for download...')
     try {
       const res = await api.post(model.ttsEndpoint,
-        { text: text.trim(), language: voice.lang, speaker: voice.id, pace: speed },
+        { text: text.trim(), language: voice.lang, speaker: genderRef.current, pace: speed },
         { responseType: 'blob' })
       const blob = new Blob([res.data], { type: 'audio/mpeg' })
       setAudioBlob(blob)
@@ -330,9 +441,15 @@ export default function VoiceLab() {
   const startBargeInWatcher = (onBargeIn) => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
     if (!SR) return
+    // Map session language to BCP-47 for browser SpeechRecognition
+    const langBcp47Map = {
+      telugu: 'te-IN', hindi: 'hi-IN', english: 'en-IN',
+      'british english': 'en-GB', kannada: 'kn-IN',
+    }
+    const recLang = langBcp47Map[agentLang] || 'en-IN'
     try {
       const rec = new SR()
-      rec.lang = 'en-US'
+      rec.lang = recLang
       rec.continuous = true
       rec.interimResults = true
       rec.onresult = () => {
@@ -362,15 +479,15 @@ export default function VoiceLab() {
     setAgentVoiceName(voiceId.charAt(0).toUpperCase() + voiceId.slice(1))
     setAgentStatus('speaking')
 
-    const langMap    = { telugu: 'te', hindi: 'hi', english: 'en', mixed: 'te' }
+    const langMap    = { telugu: 'te', hindi: 'hi', english: 'en', 'british english': 'en-GB', kannada: 'kn', mixed: 'te' }
     const ttsLang    = langMap[agentLang] || 'en'
-    const ttsVoice   = 'default'
+    const ttsVoice   = genderRef.current || 'female'
     const ttsEndpoint = activeModelRef.current.ttsEndpoint
 
     const sentences = text.match(/[^.!?]+[.!?]*/g)?.map(s => s.trim()).filter(Boolean) || [text]
 
     const fetchAudio = (chunk) => api.post(ttsEndpoint,
-      { text: chunk.slice(0, 490), language: detectLang(chunk) || ttsLang, speaker: ttsVoice },
+      { text: chunk.slice(0, 490), language: ttsLang, speaker: ttsVoice },
       { responseType: 'blob' }
     ).then(r => URL.createObjectURL(new Blob([r.data], { type: 'audio/mpeg' })))
      .catch(() => null)
@@ -452,7 +569,8 @@ export default function VoiceLab() {
           const transcript = r.data.transcript || ''
           const detectedLang = r.data.detected_language || 'en'
           const langHint = detectedLang.startsWith('te') ? '[lang:telugu] ' :
-                           detectedLang.startsWith('hi') ? '[lang:hindi] ' : ''
+                           detectedLang.startsWith('hi') ? '[lang:hindi] ' :
+                           detectedLang.startsWith('kn') ? '[lang:kannada] ' : ''
           const best = transcript.trim() || finalText.trim()
           finish(best ? langHint + best : '')
         } catch {
@@ -464,8 +582,9 @@ export default function VoiceLab() {
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition
       if (SR) {
         // Use browser STT just for VAD (silence detection) — Deepgram for actual transcript
+        const vadLangMap = { telugu: 'te-IN', hindi: 'hi-IN', english: 'en-IN', 'british english': 'en-GB', kannada: 'kn-IN' }
         const vad = new SR()
-        vad.lang = 'en-US'; vad.continuous = true; vad.interimResults = true
+        vad.lang = vadLangMap[agentLang] || 'en-IN'; vad.continuous = true; vad.interimResults = true
         vad.onresult = (e) => {
           clearTimeout(silenceTimer)
           for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -495,8 +614,9 @@ export default function VoiceLab() {
       // Fallback to browser STT only
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition
       if (!SR) { finish(''); return }
+      const fbLangMap = { telugu: 'te-IN', hindi: 'hi-IN', english: 'en-IN', 'british english': 'en-GB', kannada: 'kn-IN' }
       const rec = new SR()
-      rec.lang = 'en-US'; rec.continuous = true; rec.interimResults = true
+      rec.lang = fbLangMap[agentLang] || 'en-IN'; rec.continuous = true; rec.interimResults = true
       let interim = ''
       rec.onresult = (e) => {
         clearTimeout(silenceTimer)
@@ -664,45 +784,65 @@ export default function VoiceLab() {
               transition={{ duration: 0.22 }}>
               <div className="vl-tts-grid">
 
-                {/* LEFT — voice + speed */}
+                {/* LEFT — voice + gender + speed */}
                 <div className="vl-tts-left">
-                  <p className="vl-section-label">Voice Selection</p>
-                  <div>
-                    <p className="vl-label vl-mb-8">
-                      Active &nbsp;
-                      <span style={{ color: activeModel.color, textTransform: 'none', fontWeight: 600 }}>
-                        {selectedVoice.label} · {selectedVoice.type}
-                      </span>
-                    </p>
-                    <div className="vl-voice-grid">
-                      {activeModel.voices.map(v => (
-                        <motion.button key={v.label} whileTap={{ scale: 0.93 }}
-                          onClick={() => { setSelectedVoice(v); selectedVoiceRef.current = v; setAudioBlob(null) }}
-                          className={`vl-voice-btn${selectedVoice.label === v.label ? ' active' : ''}`}
-                          style={{ '--vc': activeModel.color, '--vrgb': activeModel.rgb }}>
-                          <span className="vl-voice-flag">
-                            {v.lang === 'en' ? '🇬🇧' : v.lang === 'mix' ? '🌐' : '🇮🇳'}
-                          </span>
-                          <span className="vl-voice-name">{v.label}</span>
-                          <span className="vl-voice-lang">{v.lang.toUpperCase()}</span>
+                  <p className="vl-section-label">Language</p>
+                  <div className="vl-voice-grid">
+                    {activeModel.voices.map(v => (
+                      <motion.button key={v.id} whileTap={{ scale: 0.93 }}
+                        onClick={() => { setSelectedVoice(v); selectedVoiceRef.current = v; setAudioBlob(null) }}
+                        className={`vl-voice-btn${selectedVoice.id === v.id ? ' active' : ''}`}
+                        style={{ '--vc': activeModel.color, '--vrgb': activeModel.rgb }}>
+                        <span className="vl-voice-flag">{v.flag}</span>
+                        <span className="vl-voice-name">{v.label}</span>
+                        <span className="vl-voice-lang">{v.lang.toUpperCase()}</span>
+                      </motion.button>
+                    ))}
+                  </div>
+
+                  {/* Gender selector */}
+                  <div style={{ marginTop: '12px' }}>
+                    <p className="vl-section-label">Voice Gender</p>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                      {['female', 'male'].map(g => (
+                        <motion.button key={g} whileTap={{ scale: 0.95 }}
+                          onClick={() => { setGender(g); genderRef.current = g; setAudioBlob(null) }}
+                          style={{
+                            flex: 1, padding: '6px 0', borderRadius: '8px', fontSize: '12px',
+                            fontWeight: 600, cursor: 'pointer', border: '1px solid',
+                            background: gender === g ? `rgba(${activeModel.rgb},0.15)` : 'transparent',
+                            borderColor: gender === g ? `rgba(${activeModel.rgb},0.4)` : 'var(--border)',
+                            color: gender === g ? activeModel.color : 'var(--text-muted)',
+                          }}>
+                          {g === 'female' ? '♀️ Female' : '♂️ Male'}
                         </motion.button>
                       ))}
                     </div>
                   </div>
 
-                  <div>
-                    <p className="vl-section-label" style={{ marginTop: '8px' }}>Speed</p>
+                  <div style={{ marginTop: '12px' }}>
+                    <p className="vl-section-label">Speed</p>
                     <div className="vl-row-between vl-mb-4">
                       <p className="vl-label">Pace</p>
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: activeModel.color }}>{pace}×</span>
+                      <span style={{
+                        fontSize: '13px', fontWeight: 700,
+                        color: pace <= 0.7 ? '#60a5fa' : pace <= 1.0 ? '#34d399' : pace <= 1.4 ? activeModel.color : '#f97316',
+                        transition: 'color 0.2s'
+                      }}>
+                        {pace}× &nbsp;
+                        {pace <= 0.7 ? '🐢 Very Slow' : pace <= 1.0 ? '🚶 Slow' : pace <= 1.3 ? '🏃 Normal' : pace <= 1.6 ? '⚡ Fast' : '🚀 Very Fast'}
+                      </span>
                     </div>
-                    <input type="range" min="0.8" max="1.8" step="0.1" value={pace}
-                      onChange={e => setPace(parseFloat(e.target.value))}
-                      className="vl-slider" style={{ accentColor: activeModel.color }} />
+                    <input type="range" min="0.5" max="2.0" step="0.1" value={pace}
+                      onChange={e => { setPace(parseFloat(e.target.value)); setAudioBlob(null) }}
+                      className="vl-slider"
+                      style={{
+                        accentColor: pace <= 0.7 ? '#60a5fa' : pace <= 1.0 ? '#34d399' : pace <= 1.4 ? activeModel.color : '#f97316',
+                      }} />
                     <div className="vl-row-between" style={{ marginTop: '4px' }}>
-                      <span className="vl-dim">0.8× Slow</span>
-                      <span className="vl-dim">1.2× Normal</span>
-                      <span className="vl-dim">1.8× Fast</span>
+                      <span className="vl-dim">🐢 0.5×</span>
+                      <span className="vl-dim">🏃 1.2×</span>
+                      <span className="vl-dim">🚀 2.0×</span>
                     </div>
                   </div>
                 </div>
@@ -715,7 +855,7 @@ export default function VoiceLab() {
                     placeholder={`Type in ${selectedVoice.type.split(' ')[0]}...\n\ne.g. Hello! I'm your AI calling assistant. How can I help you today?`}
                     className="vl-textarea" />
                   <div className="vl-row-between" style={{ marginTop: '6px', marginBottom: '14px' }}>
-                    <span className={`vl-char-count${text.length > 500 ? ' over' : ''}`}>{text.length} / 500</span>
+                    <span className={`vl-char-count${text.length > 2000 ? ' over' : ''}`} style={{ color: text.length > 2000 ? '#ef4444' : text.length > 1500 ? '#f97316' : '#55556a' }}>{text.length} / 2000 {text.length > 500 ? `· ${Math.ceil(text.length/490)} chunks` : ''}</span>
                     {text && <button onClick={() => { setText(''); setAudioBlob(null); setStatus('') }} className="vl-clear-btn">Clear</button>}
                   </div>
 
@@ -731,7 +871,7 @@ export default function VoiceLab() {
                       {humanizing ? 'Humanizing…' : 'Humanize'}
                     </motion.button>
                     <motion.button whileTap={{ scale: 0.95 }} onClick={playing ? stopAudio : speak}
-                      disabled={!text.trim() || generating || text.length > 500} className="vl-speak-btn"
+                      disabled={!text.trim() || generating || text.length > 2000} className="vl-speak-btn"
                       style={{
                         background: playing
                           ? 'linear-gradient(135deg,#ef4444,#dc2626)'

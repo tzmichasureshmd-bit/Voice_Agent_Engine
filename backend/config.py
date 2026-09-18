@@ -6,9 +6,9 @@ load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
 # AI Model Settings
-AI_MODEL      = "llama-3.1-8b-instant"   # fast model for all AI calls
-FAST_MODEL    = "llama-3.1-8b-instant"   # real-time responses
-SMART_MODEL   = "llama3-70b-8192"        # use only for deep analysis if needed
+AI_MODEL      = "groq/compound-mini"   # fast model for all AI calls
+FAST_MODEL    = "groq/compound-mini"   # real-time responses
+SMART_MODEL   = "groq/compound"        # use only for deep analysis if needed
 AI_TEMPERATURE = 0.7
 
 

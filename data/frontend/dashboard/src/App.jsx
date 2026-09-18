@@ -23,6 +23,7 @@ import Billing from './components/Billing'
 import Integrations from './components/Integrations'
 import Settings from './components/Settings'
 import APIPage from './components/APIPage'
+import Analytics from './components/Analytics'
 import ClientAdmin from './components/ClientAdmin'
 import WhatsAppPage from './components/WhatsAppPage'
 import SMSPage from './components/SMSPage'
@@ -182,7 +183,7 @@ function App() {
       case 'logs':         return <CallLogs />
       case 'calls':        return <CallSimulator clientData={clientData} />
       case 'campaigns':    return <Campaigns />
-      case 'analytics':    return <Dashboard />
+      case 'analytics':    return <Analytics />
       case 'voicelab':     return <VoiceLab />
       case 'team':         return <Team />
       case 'profile':      return <Profile clientData={clientData} setClientData={setClientData} />

@@ -1,6 +1,18 @@
-# 🚀 AI Call Filtration + Lead Generation System
+# TZMICHA AI Voice Engine — Quick Start Guide
 
-AI-powered outbound calling system that talks like a human, qualifies leads, and categorizes them as Hot/Warm/Cold.
+---
+
+## 📌 Why This Document Exists & What It's For
+
+**Who should read this:** Everyone — developers, testers, marketing, new joiners, anyone seeing this project for the first time.
+
+**Why it exists:** This is the first document you read. It tells you what the product is, how to get it running on your machine in under 10 minutes, and the basic API endpoints. No deep technical detail here — that's in `DOCUMENTATION.md`. This is just "what is it and how do I run it."
+
+**What it covers:** Product overview, setup steps, API endpoint list, cost breakdown, and upgrade path.
+
+---
+
+AI-powered outbound calling platform that speaks Telugu, Hindi, Kannada, and English, qualifies leads automatically, and categorizes them as Hot 🔥 / Warm 🌤️ / Cold ❄️.
 
 ## 🎯 Features
 

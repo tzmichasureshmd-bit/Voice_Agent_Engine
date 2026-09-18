@@ -38,6 +38,33 @@ def _run_async(coro):
 AUDIO_DIR = Path(__file__).parent / "audio_cache"
 AUDIO_DIR.mkdir(exist_ok=True)
 
+if SERVER_PUBLIC_URL in ("http://localhost:8000", ""):
+    import logging as _log
+    _log.getLogger(__name__).warning(
+        "[voice_caller] SERVER_PUBLIC_URL is not set to a public URL. "
+        "Exotel/Plivo webhooks will not work until SERVER_PUBLIC_URL is set in .env."
+    )
+
+_AUDIO_MAX_AGE_SECONDS = 1800  # 30 minutes
+
+def cleanup_audio_cache():
+    """
+    Delete MP3 files in audio_cache older than 30 minutes.
+    Call this periodically (e.g. from a background task or after each call ends).
+    """
+    now = time.time()
+    deleted = 0
+    for f in AUDIO_DIR.glob("*.mp3"):
+        try:
+            if now - f.stat().st_mtime > _AUDIO_MAX_AGE_SECONDS:
+                f.unlink()
+                deleted += 1
+        except Exception:
+            pass
+    if deleted:
+        print(f"[audio_cache] Cleaned up {deleted} old MP3 files")
+    return deleted
+
 # ── In-memory call store ───────────────────────────────────────
 active_voice_calls: dict = {}
 
@@ -84,14 +111,15 @@ def fmt_phone_plivo(phone: str) -> str:
 async def _tts_to_url(text: str, language: str = "en") -> str:
     """
     Synthesize text → Edge TTS mp3 → save to audio_cache →
-    return public URL Exotel can <Play>
+    return public URL Exotel can <Play>.
+    Language can be an orchestrator name ('telugu') or canonical code ('te').
     """
     try:
         import engine_tts
-        # map orchestrator lang names → engine_tts lang codes
-        lang_map = {"telugu": "te", "hindi": "hi", "english": "en", "te": "te", "hi": "hi", "en": "en"}
-        lang = lang_map.get(language, "en")
-        audio_bytes = await engine_tts.synthesize_async(text, language=lang)
+        from lang_config import ORCHESTRATOR_TO_CODE, resolve_language
+        # Resolve orchestrator name → canonical code → correct voice
+        canonical = ORCHESTRATOR_TO_CODE.get(language.lower(), None) or resolve_language(language)
+        audio_bytes = await engine_tts.synthesize_async(text, language=canonical)
         filename = f"{uuid.uuid4().hex}.mp3"
         filepath = AUDIO_DIR / filename
         filepath.write_bytes(audio_bytes)
@@ -266,12 +294,16 @@ async def process_speech_turn(call_id: str, recording_url: str, digits: str = ""
         except Exception as e:
             print(f"[STT] download failed: {e}")
 
-    # ── 2. Whisper STT (Exotel sends mp3) ──
+    # ── 2. Whisper STT — pass session language as hint for better accuracy ──
     user_text = ""
     if audio_bytes:
         try:
             import engine_stt
-            result = engine_stt.transcribe(audio_bytes, fmt="mp3")
+            from lang_config import ORCHESTRATOR_TO_CODE
+            # Convert orchestrator language name to canonical code for STT hint
+            session_lang = call.get("language", "english")
+            stt_lang_hint = ORCHESTRATOR_TO_CODE.get(session_lang, "en")
+            result = engine_stt.transcribe(audio_bytes, language=stt_lang_hint, fmt="mp3")
             user_text = result.strip()
         except Exception as e:
             print(f"[STT] transcribe failed: {e}")
@@ -294,9 +326,12 @@ async def process_speech_turn(call_id: str, recording_url: str, digits: str = ""
   <Record action="{speech_url}" method="POST" maxLength="15" finishOnKey="#" playBeep="false" transcribe="false"/>
 </Response>"""
 
-    # ── 3. Language detection (LanguageService) ──
-    detected_lang = await language_svc.detect(user_text)
-    call["language"] = detected_lang  # te / hi / en
+    # ── 3. Language detection — use orchestrator's detect_language for consistency ──
+    # language_svc returns short codes (te/hi/en); orchestrator uses names (telugu/hindi/english)
+    # Use orchestrator detect_language so the session and voice_caller stay in sync
+    from orchestrator import detect_language as orch_detect_language
+    orch_lang = orch_detect_language(user_text, call.get("language", "english"))
+    call["language"] = orch_lang  # store as orchestrator name e.g. "telugu"
 
     # ── 4. Log transcript ──
     call["transcript"].append({"role": "user", "content": user_text})
@@ -308,7 +343,7 @@ async def process_speech_turn(call_id: str, recording_url: str, digits: str = ""
     if any(w in user_text.lower() for w in end_words):
         call["status"] = "completed"
         farewell = "Thank you for your time. Have a wonderful day. Goodbye!"
-        audio_url = await _tts_to_url(farewell, detected_lang)
+        audio_url = await _tts_to_url(farewell, orch_lang)
         return _exoml_hangup_audio(farewell, audio_url)
 
     # ── 6. Orchestrator AI (memory + workflow + language aware) ──
@@ -331,7 +366,7 @@ async def process_speech_turn(call_id: str, recording_url: str, digits: str = ""
     ai_reply = result.get("tts_reply") or result.get("reply") or "Tell me more!"
     emotion  = result.get("emotion", "neutral")
     intent   = result.get("intent", "unknown")
-    lang_out = result.get("language", detected_lang)
+    lang_out = result.get("language", orch_lang)
 
     # ── 7. Voice Enhancer (human-sounding fillers, topic return) ──
     ai_reply = enhancer.enhance(

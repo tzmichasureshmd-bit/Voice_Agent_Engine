@@ -16,7 +16,8 @@ const CARD_GRADIENTS = [
   'linear-gradient(135deg,#d97706,#b45309)',
 ]
 
-const LANGUAGES = ['English', 'Telugu (India)', 'Hindi', 'Tamil', 'Kannada', 'Malayalam', 'Bengali', 'Marathi', 'Gujarati']
+const LANGUAGES = ['English', 'Telugu', 'Hindi', 'British English', 'Kannada']
+// Note: 'Telugu (India)' normalised to 'Telugu' to match backend lang_config codes.
 const TYPES = ['Outbound', 'Inbound']
 const GENDERS = ['Male', 'Female']
 const GOALS = ['Lead Generation and Qualification', 'Customer Support', 'Appointment Booking', 'Survey', 'Other']

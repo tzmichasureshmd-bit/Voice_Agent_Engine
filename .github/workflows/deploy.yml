@@ -19,7 +19,7 @@ jobs:
 
             # Clone on first deploy, force reset on subsequent
             if [ ! -d "/opt/voice-ai/.git" ]; then
-              git clone https://github.com/tzmichasureshmd-bit/Voice_Agent_Engine.git /opt/voice-ai
+              git clone https://oauth2:${{ secrets.GH_PAT }}@github.com/tzmichasureshmd-bit/Voice_Agent_Engine.git /opt/voice-ai
             fi
 
             cd /opt/voice-ai
@@ -28,12 +28,6 @@ jobs:
 
             # Write .env from GitHub Secret to correct location
             echo "${{ secrets.ENV_PRODUCTION }}" > /opt/voice-ai/deploy/.env.production
-
-            # Write Firebase service account key (never in git)
-            echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > /opt/voice-ai/backend/serviceAccountKey.json
-
-            # Write Firebase service account key (never in git — secret)
-            echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > /opt/voice-ai/backend/serviceAccountKey.json
 
             # Write Firebase service account key (never in git)
             echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > /opt/voice-ai/backend/serviceAccountKey.json

@@ -4,7 +4,7 @@ import json
 
 # Singleton — reuse connection, no cold start
 client = Groq(api_key=GROQ_API_KEY)
-FAST_MODEL = "llama-3.1-8b-instant"
+FAST_MODEL = "groq/compound-mini"
 
 
 SYSTEM_PROMPT = """You are a friendly AI sales caller on a live phone call. Sound like a real human.

@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
-import { Plus, Megaphone, X, Play, Users } from 'lucide-react'
+import { Plus, Megaphone, X, Play, Users, CheckCircle2 } from 'lucide-react'
 import api from '../api'
 
 export default function Campaigns() {
@@ -59,7 +59,9 @@ export default function Campaigns() {
         {runResult && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             style={{ padding: '14px 18px', borderRadius: '10px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <p style={{ fontSize: '13px', color: '#34d399', fontWeight: '500' }}>✅ {runResult.message}</p>
+            <p style={{ fontSize: '13px', color: '#34d399', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <CheckCircle2 size={14} /> {runResult.message}
+            </p>
             <button onClick={() => setRunResult(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#34d399' }}><X size={14} /></button>
           </motion.div>
         )}
@@ -80,16 +82,13 @@ export default function Campaigns() {
                   <Megaphone size={16} color="var(--accent-light)" />
                 </div>
                 <span style={{ fontSize: '10px', fontWeight: '700', background: 'rgba(34,197,94,0.1)', color: '#34d399', border: '1px solid rgba(34,197,94,0.2)', padding: '3px 8px', borderRadius: '6px' }}>
-                  {camp.is_active ? 'Active' : 'Paused'}
+                  Active
                 </span>
               </div>
               <h3 style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>{camp.name}</h3>
               <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{camp.product_info}</p>
               <div style={{ display: 'flex', gap: '12px', paddingTop: '12px', borderTop: '1px solid var(--border)', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '12px' }}>
-                <span>Calls: {camp.total_calls}</span>
-                <span style={{ color: '#f87171' }}>Hot: {camp.hot_leads}</span>
-                <span style={{ color: '#fbbf24' }}>Warm: {camp.warm_leads}</span>
-                <span style={{ color: '#60a5fa' }}>Cold: {camp.cold_leads}</span>
+                <span>Calls: {camp.total_calls || 0}</span>
               </div>
               <button onClick={() => runCampaign(camp.id)} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', fontSize: '12px' }}>
                 <Play size={13} /> Run Campaign ({newLeads} leads)

@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
-import { Phone, Clock, Download, PhoneForwarded, Radio, ArrowRightLeft, FileText, MessageCircle, TrendingUp, AlertTriangle, Zap, Target, Brain, Calendar, PhoneCall, CheckCircle2 } from 'lucide-react'
+import { Phone, Clock, Download, PhoneForwarded, Radio, ArrowRightLeft, FileText, MessageCircle, TrendingUp, AlertTriangle, Zap, Target, Brain, Calendar, PhoneCall, CheckCircle2, RefreshCw, PhoneIncoming, PhoneOutgoing, Flame, Thermometer, Snowflake } from 'lucide-react'
 import api from '../api'
 
 // ── WhatsApp helpers ──────────────────────────────────────────
@@ -13,27 +13,26 @@ const LABELS = {
 }
 
 function buildSummary(call, lang = 'en') {
-  const dir   = call.direction === 'inbound' ? 'Incoming 📲' : 'Outgoing 📞'
-  const emoji = call.category === 'hot' ? '🔥' : call.category === 'warm' ? '🌤️' : '❄️'
-  const dur   = call.duration_seconds
+  const dir  = call.direction === 'inbound' ? 'Incoming Call' : 'Outgoing Call'
+  const cat  = (call.category || 'warm').charAt(0).toUpperCase() + (call.category || 'warm').slice(1)
+  const dur  = call.duration_seconds
     ? `${Math.floor(call.duration_seconds / 60)}m ${call.duration_seconds % 60}s`
     : 'N/A'
   const t = LABELS[lang] || LABELS.en
-  // Use per-language summary if stored, else fallback to default summary
-  const summaryText = call[`summary_${lang}`] || call.summary || 'No summary available'
+  const summaryText = cleanSummary(call[`summary_${lang}`] || call.summary) || 'No summary available'
 
   return (
-    `📞 *${dir} ${t.title}*\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `👤 *${t.lead}:* ${call.lead_name}\n` +
-    `⏱️ *${t.dur}:* ${dur}\n` +
-    `🎯 *${t.score}:* ${call.lead_score}/10\n` +
-    `${emoji} *${t.cat}:* ${(call.category || 'warm').toUpperCase()}\n` +
-    `😊 *${t.sent}:* ${call.sentiment || 'neutral'}\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `📋 *${t.summ}:*\n${summaryText}\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `🤖 AI Voice Engine`
+    `TZMICHA AI - ${dir}\n` +
+    `\n` +
+    `${t.lead}: ${call.lead_name}\n` +
+    `${t.dur}: ${dur}\n` +
+    `${t.score}: ${call.lead_score}/10\n` +
+    `${t.cat}: ${cat}\n` +
+    `${t.sent}: ${call.sentiment || 'neutral'}\n` +
+    `\n` +
+    `${t.summ}:\n${summaryText}\n` +
+    `\n` +
+    `Powered by TZMICHA AI Voice Engine`
   )
 }
 
@@ -84,17 +83,30 @@ function ScoreRing({ score }) {
 const GLOW  = { hot: '239,68,68', warm: '245,158,11', cold: '59,130,246' }
 const CCOLOR = { hot: '#f87171', warm: '#fbbf24', cold: '#60a5fa' }
 
+// Strip any stored API error text — never show raw errors to users
+function cleanSummary(summary) {
+  if (!summary) return ''
+  if (
+    summary.includes('Analysis failed') ||
+    summary.includes('Error code') ||
+    summary.includes('invalid_api_key') ||
+    summary.includes('401') ||
+    summary.includes('Invalid API')
+  ) return ''
+  return summary
+}
+
 // ── Call Intelligence Panel ──────────────────────────────────
 function CallIntelligence({ call }) {
   const urgencyColor = {
-    immediate:    { color: '#f87171', bg: 'rgba(248,113,113,0.1)', label: '🚨 Immediate' },
-    within_24h:   { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  label: '⚡ Within 24h' },
-    this_week:    { color: '#06b6d4', bg: 'rgba(6,182,212,0.1)',   label: '📅 This Week' },
-    low_priority: { color: 'var(--text-muted)', bg: 'rgba(85,85,106,0.1)',   label: '🔵 Low Priority' },
+    immediate:    { color: '#f87171', bg: 'rgba(248,113,113,0.1)', label: 'Immediate' },
+    within_24h:   { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  label: 'Within 24h' },
+    this_week:    { color: '#06b6d4', bg: 'rgba(6,182,212,0.1)',   label: 'This Week' },
+    low_priority: { color: 'var(--text-muted)', bg: 'rgba(85,85,106,0.1)', label: 'Low Priority' },
   }
   const emotionEmoji = {
-    excited: '🤩', positive: '😊', neutral: '😐',
-    hesitant: '🤔', frustrated: '😤', angry: '😠'
+    excited: '', positive: '', neutral: '',
+    hesitant: '', frustrated: '', angry: ''
   }
   const intentLabel = {
     interested: 'Interested', not_interested: 'Not Interested',
@@ -159,7 +171,7 @@ function CallIntelligence({ call }) {
           </div>
           {call.objections.map((o, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
-              <span style={{ fontSize: '10px', color: '#fbbf24' }}>⚠</span>
+              <AlertTriangle size={10} color="#fbbf24" />
               <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{o}</span>
             </div>
           ))}
@@ -203,7 +215,7 @@ function FollowUpActions({ call }) {
       border: 'rgba(6,182,212,0.25)',
       action: () => {
         const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1)
-        alert(`📞 Reminder set: Call ${call.lead_name} on ${tomorrow.toLocaleDateString()}`)
+        alert(`Reminder set: Call ${call.lead_name} on ${tomorrow.toLocaleDateString()}`)
         setDone('call_tomorrow')
       }
     },
@@ -214,15 +226,18 @@ function FollowUpActions({ call }) {
       color: '#25d366',
       bg: 'rgba(37,211,102,0.1)',
       border: 'rgba(37,211,102,0.25)',
-      action: () => {
-        const numbers = (() => { try { return JSON.parse(localStorage.getItem('s_wa_numbers') || '[]') } catch { return [] } })()
+      action: async () => {
         const text = buildSummary(call, 'en')
-        if (call.phone && call.phone !== 'simulated') {
-          openWa(call.phone, text)
-        } else if (numbers.length > 0) {
-          openWa(numbers[0].phone, text)
+        let phone = (call.phone && call.phone !== 'simulated') ? call.phone : null
+        if (!phone && call.lead_id) {
+          try { const r = await api.get(`/leads/${call.lead_id}`); phone = r.data.phone || null } catch {}
+        }
+        if (phone) {
+          openWa(phone, text)
         } else {
-          alert('No phone number available. Add numbers in Settings → WhatsApp.')
+          const nums = (() => { try { return JSON.parse(localStorage.getItem('s_wa_numbers') || '[]') } catch { return [] } })()
+          if (nums.length > 0) openWa(nums[0].phone, text)
+          else alert('No phone number found for this lead.')
         }
         setDone('whatsapp_now')
       }
@@ -264,9 +279,19 @@ function FollowUpActions({ call }) {
 // ── WhatsApp Manual Button ────────────────────────────────────
 function WhatsAppBtn({ call }) {
   const [sent, setSent] = useState(null)
+  const [leadPhone, setLeadPhone] = useState(null)
   const numbers = (() => {
     try { return JSON.parse(localStorage.getItem('s_wa_numbers') || '[]') } catch { return [] }
   })()
+
+  // Fetch lead phone if call was simulated
+  useEffect(() => {
+    if (call.phone && call.phone !== 'simulated') {
+      setLeadPhone(call.phone)
+    } else if (call.lead_id) {
+      api.get(`/leads/${call.lead_id}`).then(r => setLeadPhone(r.data.phone || null)).catch(() => {})
+    }
+  }, [call.id])
 
   const handleSend = (phone, lang = 'en', label = '') => {
     openWa(phone, buildSummary(call, lang))
@@ -276,28 +301,29 @@ function WhatsAppBtn({ call }) {
 
   return (
     <div style={{ marginBottom: '12px' }}>
-      <p style={{ fontSize: '11px', color: '#25d366', fontWeight: '700', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-        <MessageCircle size={11} /> Send Summary via WhatsApp
-      </p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+        <MessageCircle size={11} color="#25d366" />
+        <span style={{ fontSize: '11px', color: '#25d366', fontWeight: '700' }}>Send Summary via WhatsApp</span>
+      </div>
       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-        {call.phone && call.phone !== 'simulated' && (
-          <button onClick={() => handleSend(call.phone, 'en', 'Lead')}
-            style={{ padding: '5px 12px', borderRadius: '8px', background: 'rgba(37,211,102,0.12)', border: '1px solid rgba(37,211,102,0.3)', color: '#25d366', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>
-            📱 Lead
+        {leadPhone && (
+          <button onClick={() => handleSend(leadPhone, 'en', call.lead_name || 'Lead')}
+            style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 12px', borderRadius: '8px', background: 'rgba(37,211,102,0.12)', border: '1px solid rgba(37,211,102,0.3)', color: '#25d366', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>
+            <Phone size={10} /> {call.lead_name || 'Lead'}
           </button>
         )}
         {numbers.filter(n => n.phone).map((n, i) => (
           <button key={i} onClick={() => handleSend(n.phone, n.lang || 'en', n.label)}
-            style={{ padding: '5px 12px', borderRadius: '8px', background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.2)', color: '#25d366', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
-            👤 {n.label || `#${i + 1}`}
+            style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 12px', borderRadius: '8px', background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.2)', color: '#25d366', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
+            <MessageCircle size={10} /> {n.label || `#${i + 1}`}
             <span style={{ fontSize: '9px', marginLeft: '4px', opacity: 0.7 }}>({(n.lang || 'en').toUpperCase()})</span>
           </button>
         ))}
-        {numbers.length === 0 && (!call.phone || call.phone === 'simulated') && (
+        {!leadPhone && numbers.length === 0 && (
           <p style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Add numbers in Settings → WhatsApp Auto-Summary</p>
         )}
       </div>
-      {sent && <p style={{ fontSize: '10px', color: '#25d366', marginTop: '4px' }}>✅ Sent to {sent}!</p>}
+      {sent && <p style={{ fontSize: '10px', color: '#25d366', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><CheckCircle2 size={10} /> Sent to {sent}!</p>}
     </div>
   )
 }
@@ -333,7 +359,10 @@ function ActiveCallCard({ call, onTransfer }) {
           </div>
           <div>
             <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>
-              {call.direction === 'inbound' ? '📲 Incoming' : '📞 Outgoing'} — {call.call_id.split('_').slice(-1)[0]}
+              <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: '6px', verticalAlign: 'middle' }}>
+                {call.direction === 'inbound' ? <PhoneIncoming size={13} color="#10b981" /> : <PhoneOutgoing size={13} color="#a78bfa" />}
+              </span>
+              {call.direction === 'inbound' ? 'Incoming' : 'Outgoing'} — {call.call_id.split('_').slice(-1)[0]}
             </p>
             <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
               {call.transcript_turns} turns · Score {call.score}/10 · {call.emotion} · {call.intent || 'qualifying'}
@@ -348,16 +377,16 @@ function ActiveCallCard({ call, onTransfer }) {
         <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border)', display: 'flex', gap: '8px', alignItems: 'center' }}>
           <ArrowRightLeft size={13} color="#a78bfa" />
           <span style={{ fontSize: '12px', color: '#a78bfa', fontWeight: '600' }}>
-            {call.transfer_requested ? '✅ Transfer queued' : '🔥 HOT lead — Transfer to human?'}
+            {call.transfer_requested ? 'Transfer queued' : 'HOT lead — Transfer to human?'}
           </span>
           {!call.transfer_requested && (
             <>
               <input value={humanNum} onChange={e => setHumanNum(e.target.value)} placeholder="Human agent number"
                 style={{ flex: 1, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: '8px', padding: '5px 10px', fontSize: '12px', color: 'var(--text-primary)', outline: 'none' }} />
               <motion.button whileTap={{ scale: 0.95 }} onClick={handleTransfer} disabled={!humanNum.trim() || transferring}
-                style={{ padding: '5px 14px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#a78bfa,#7c3aed)', color: '#fff', fontSize: '12px', fontWeight: '700', opacity: !humanNum.trim() ? 0.5 : 1 }}>
-                <PhoneForwarded size={12} style={{ display: 'inline', marginRight: 4 }} />
-                {transferring ? 'Transferring…' : 'Transfer'}
+                style={{ padding: '5px 14px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#a78bfa,#7c3aed)', color: '#fff', fontSize: '12px', fontWeight: '700', opacity: !humanNum.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <PhoneForwarded size={12} />
+                {transferring ? 'Transferring...' : 'Transfer'}
               </motion.button>
             </>
           )}
@@ -372,8 +401,18 @@ export default function CallLogs() {
   const [calls,       setCalls]       = useState([])
   const [activeCalls, setActiveCalls] = useState([])
   const [expanded,    setExpanded]    = useState(null)
+  const [reanalyzing, setReanalyzing] = useState(null)
   const prevCallIds = useRef(new Set())
   const pollRef     = useRef(null)
+
+  const handleReanalyze = async (callId) => {
+    setReanalyzing(callId)
+    try {
+      await api.post(`/calls/${callId}/reanalyze`)
+      await fetchCalls()
+    } catch {}
+    setReanalyzing(null)
+  }
 
   const fetchCalls = () =>
     api.get('/calls').then(r => {
@@ -475,9 +514,14 @@ export default function CallLogs() {
                       </div>
                       <div style={{ minWidth: 0 }}>
                         <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {call.direction === 'inbound' ? '📲 ' : '📞 '}{call.lead_name}
+                          <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: '6px', verticalAlign: 'middle' }}>
+                            {call.direction === 'inbound' ? <PhoneIncoming size={13} color="#10b981" /> : <PhoneOutgoing size={13} color="#a78bfa" />}
+                          </span>
+                          {call.lead_name}
                           {call.call_status === 'transferred' && (
-                            <span style={{ marginLeft: 8, fontSize: '10px', color: '#a78bfa', background: 'rgba(167,139,250,0.1)', padding: '2px 7px', borderRadius: '999px', border: '1px solid rgba(167,139,250,0.25)' }}>👤 Transferred</span>
+          <span style={{ marginLeft: 8, fontSize: '10px', color: '#a78bfa', background: 'rgba(167,139,250,0.1)', padding: '2px 7px', borderRadius: '999px', border: '1px solid rgba(167,139,250,0.25)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <PhoneForwarded size={9} /> Transferred
+                          </span>
                           )}
                         </p>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '3px' }}>
@@ -496,23 +540,36 @@ export default function CallLogs() {
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }}
                       style={{ marginTop: '14px', paddingTop: '14px', borderTop: `1px solid rgba(${g},0.1)` }}>
-                      {call.summary && (
-                        <div style={{ marginBottom: '12px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                      {/* AI Summary — with Re-analyze button */}
+                      <div style={{ marginBottom: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', marginBottom: '6px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <FileText size={12} color="#a78bfa" />
                             <span style={{ fontSize: '11px', color: '#a78bfa', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>AI Summary</span>
                           </div>
-                          <p style={{ fontSize: '12px', color: '#8888aa', lineHeight: 1.7 }}>{call.summary}</p>
+                          <button
+                            onClick={e => { e.stopPropagation(); handleReanalyze(call.id) }}
+                            disabled={reanalyzing === call.id}
+                            style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', fontWeight: '700', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(124,58,237,0.3)', background: 'rgba(124,58,237,0.1)', color: '#a78bfa', cursor: 'pointer', opacity: reanalyzing === call.id ? 0.6 : 1 }}>
+                            <RefreshCw size={10} style={{ animation: reanalyzing === call.id ? 'spin 1s linear infinite' : 'none' }} />
+                            {reanalyzing === call.id ? 'Analyzing...' : 'Re-analyze'}
+                          </button>
                         </div>
-                      )}
+                        {cleanSummary(call.summary)
+                          ? <p style={{ fontSize: '12px', color: '#8888aa', lineHeight: 1.7 }}>{cleanSummary(call.summary)}</p>
+                          : <p style={{ fontSize: '12px', color: 'var(--text-dim)', fontStyle: 'italic' }}>No summary yet — click Re-analyze to generate</p>
+                        }
+                      </div>
                       <CallIntelligence call={call} />
                       <FollowUpActions call={call} />
-                      <WhatsAppBtn call={call} />
                       {call.recording_url && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg-input)', borderRadius: '10px', padding: '10px 14px', border: '1px solid var(--border)' }}>
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>🎙️ Recording</span>
+                          <Radio size={12} color="var(--text-muted)" />
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>Recording</span>
                           <audio controls src={call.recording_url} style={{ flex: 1, height: '28px', accentColor: '#a78bfa' }} />
-                          <a href={call.recording_url} download style={{ color: '#a78bfa', fontSize: '11px', textDecoration: 'none', padding: '4px 10px', border: '1px solid rgba(167,139,250,0.3)', borderRadius: '6px', whiteSpace: 'nowrap' }}>⬇ Save</a>
+                          <a href={call.recording_url} download style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#a78bfa', fontSize: '11px', textDecoration: 'none', padding: '4px 10px', border: '1px solid rgba(167,139,250,0.3)', borderRadius: '6px', whiteSpace: 'nowrap' }}>
+                            <Download size={11} /> Save
+                          </a>
                         </div>
                       )}
                     </motion.div>

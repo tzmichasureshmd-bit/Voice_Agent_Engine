@@ -417,6 +417,7 @@ export default function VoiceLab() {
   const [agentEmotion,  setAgentEmotion]  = useState('neutral')
   const [agentIntent,   setAgentIntent]   = useState('')
   const [agentLang,     setAgentLang]     = useState('english')
+  const agentLangRef = useRef('english')
   const [agentLatency,  setAgentLatency]  = useState(null)  // {llm_ms, total_ms}
 
   const EMOTION_COLOR = { angry:'#ef4444', happy:'#22c55e', confused:'#f59e0b', uncertain:'#a78bfa', neutral:'#06b6d4' }
@@ -446,7 +447,7 @@ export default function VoiceLab() {
       telugu: 'te-IN', hindi: 'hi-IN', english: 'en-IN',
       'british english': 'en-GB', kannada: 'kn-IN',
     }
-    const recLang = langBcp47Map[agentLang] || 'en-IN'
+    const recLang = langBcp47Map[agentLangRef.current] || 'en-IN'
     try {
       const rec = new SR()
       rec.lang = recLang
@@ -480,7 +481,7 @@ export default function VoiceLab() {
     setAgentStatus('speaking')
 
     const langMap    = { telugu: 'te', hindi: 'hi', english: 'en', 'british english': 'en-GB', kannada: 'kn', mixed: 'te' }
-    const ttsLang    = langMap[agentLang] || 'en'
+    const ttsLang    = langMap[agentLangRef.current] || 'en'
     const ttsVoice   = genderRef.current || 'female'
     const ttsEndpoint = activeModelRef.current.ttsEndpoint
 
@@ -652,6 +653,7 @@ export default function VoiceLab() {
       setAgentEmotion(d.emotion  || 'neutral')
       setAgentIntent(d.intent   || '')
       setAgentLang(d.language  || 'english')
+      agentLangRef.current = d.language || 'english'
       setAgentLatency(d.latency || null)
       return d.tts_reply || d.reply || "Yeah, go on!"
     } catch (e) {

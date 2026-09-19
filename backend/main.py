@@ -486,11 +486,15 @@ def get_calls(client: Client = Depends(get_current_client), db: Session = Depend
         except: objections = []
         try: key_topics = json.loads(getattr(c, 'key_topics', None) or '[]')
         except: key_topics = []
+        # Clean up error summaries so UI never shows raw API error text
+        summary = c.summary or ''
+        if 'Analysis failed' in summary or 'Error code' in summary or 'invalid_api_key' in summary:
+            summary = ''
         result.append({
             "id": c.id, "lead_id": c.lead_id, "lead_name": c.lead_name,
             "phone": c.phone, "duration_seconds": c.duration_seconds,
             "sentiment": c.sentiment, "lead_score": c.lead_score,
-            "category": c.category, "summary": c.summary,
+            "category": c.category, "summary": summary,
             "call_status": c.call_status, "recording_url": c.recording_url,
             "direction": getattr(c, 'direction', 'outbound') or 'outbound',
             "intent": getattr(c, 'intent', '') or '',
@@ -503,6 +507,34 @@ def get_calls(client: Client = Depends(get_current_client), db: Session = Depend
             "created_at": str(c.created_at),
         })
     return {"total": len(result), "calls": result}
+
+
+@app.post("/calls/{call_id}/reanalyze")
+def reanalyze_call(call_id: int, client: Client = Depends(get_current_client), db: Session = Depends(get_db)):
+    """Re-run AI analysis on a call log — fixes calls with error summaries."""
+    call = db.query(CallLog).filter(CallLog.id == call_id, CallLog.client_id == client.id).first()
+    if not call:
+        raise HTTPException(status_code=404, detail="Call not found")
+    try:
+        history = json.loads(call.transcript or '[]')
+    except Exception:
+        history = []
+    if not history:
+        raise HTTPException(status_code=400, detail="No transcript to analyze")
+    analysis = analyze_sentiment(history)
+    call.summary            = analysis.get("summary", "")
+    call.sentiment          = analysis.get("sentiment", "neutral")
+    call.lead_score         = analysis.get("score", 5)
+    call.category           = analysis.get("category", "warm")
+    call.intent             = analysis.get("intent", "")
+    call.emotion            = analysis.get("emotion", "")
+    call.buying_signals     = json.dumps(analysis.get("buying_signals", []))
+    call.objections         = json.dumps(analysis.get("objections", []))
+    call.recommended_action = analysis.get("recommended_action", "")
+    call.follow_up_urgency  = analysis.get("follow_up_urgency", "this_week")
+    call.key_topics         = json.dumps(analysis.get("key_topics", []))
+    db.commit()
+    return {"message": "Re-analyzed successfully", "analysis": analysis}
 
 
 # ===== CAMPAIGNS =====
